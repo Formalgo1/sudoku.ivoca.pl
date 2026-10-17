@@ -53,6 +53,16 @@
     <!-- Tailwind CSS (skompilowany, hostowany razem z grą; konfiguracja: build/). Na końcu <head>, jak dawniej
          wstrzykiwał go cdn.tailwindcss.com — klasy Tailwinda (np. hidden) muszą wygrywać z Font Awesome. -->
     <link rel="stylesheet" href="vendor/tailwind.css">
+<script>
+// Anonimowe statystyki gry (powiadom.ivoca.pl/v1/stats): tylko „rozpoczęta” / „ukończona”, bez danych o graczu.
+function ivocaStat(event, won) {
+  try {
+    var body = { event: event };
+    if (typeof won === 'boolean') body.won = won;
+    fetch('https://powiadom.ivoca.pl/v1/stats', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) }).catch(function () {});
+  } catch (e) {}
+}
+</script>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">
 
@@ -425,6 +435,7 @@
         // --- OBSŁUGA STANU GRY & RENDEROWANIE ---
 
         function startNewGame() {
+            ivocaStat('start');
             state.difficulty = document.getElementById('select-difficulty').value;
             const { puzzle, solution } = generateSudoku(state.difficulty);
 
@@ -683,6 +694,7 @@
 
         function endGame(isWin) {
             state.isGameOver = true;
+            ivocaStat('finish', isWin);
             stopTimer();
 
             const modal = document.getElementById('modal-gameover');
