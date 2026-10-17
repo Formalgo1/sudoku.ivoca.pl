@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projekt — Sudoku</title>
+  <meta name="description" content="O projekcie Sudoku, regulamin serwisu, polityka prywatności i formularz kontaktowy.">
+  <script>try { var t = localStorage.getItem('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; } catch (e) {}</script>
+  <style>
+:root { --bg:#f8fafc;--card:#ffffff;--ink:#1e293b;--soft:#64748b;--line:#e2e8f0;--accent:#2563eb;--accent-ink:#ffffff; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--soft:#94a3b8;--line:#334155;--accent:#60a5fa;--accent-ink:#0f172a; } }
+:root[data-theme="dark"] { --bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--soft:#94a3b8;--line:#334155;--accent:#60a5fa;--accent-ink:#0f172a; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+a { color: var(--accent); }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 820px; margin: 0 auto; padding: 16px; }
+.brand { font-weight: 700; font-size: 20px; text-decoration: none; color: var(--ink); }
+.topbar span { color: var(--soft); }
+main.doc { max-width: 820px; margin: 0 auto 24px; padding: 24px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
+@media (min-width: 860px) { main.doc { padding: 32px 40px; } }
+h1 { font-size: 28px; line-height: 1.25; margin: 0 0 12px; }
+h2 { font-size: 21px; margin: 32px 0 8px; }
+h3 { font-size: 19px; margin: 32px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+h4 { font-size: 16px; margin: 20px 0 6px; }
+ol, ul { padding-left: 22px; }
+li { margin: 4px 0; }
+.muted { color: var(--soft); }
+.toc { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 8px 0 0; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { border: 1px solid var(--line); padding: 8px; text-align: left; vertical-align: top; }
+th { background: color-mix(in srgb, var(--line) 40%, transparent); }
+code { font-size: 13px; }
+form.contact { display: grid; gap: 12px; max-width: 520px; margin-top: 12px; }
+form.contact label { display: grid; gap: 4px; font-weight: 600; }
+form.contact label .muted { font-weight: 400; }
+.error:empty { display: none; }
+form.contact input, form.contact textarea { font: inherit; font-weight: 400; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; }
+form.contact textarea { resize: vertical; min-height: 140px; }
+.button, form.contact button { display: inline-block; font: inherit; font-weight: 700; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 10px 18px; cursor: pointer; text-decoration: none; }
+form.contact button:disabled { opacity: .6; cursor: default; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.error { color: #dc2626; margin: 0; min-height: 1em; }
+.ok { color: var(--accent); margin: 0; font-weight: 600; }
+.back { margin-top: 32px; }
+.site-footer { text-align: center; color: var(--soft); font-size: 13px; padding: 0 16px 32px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="./" class="brand">Sudoku</a>
+    <span>Projekt</span>
+  </header>
+
+  <main class="doc">
+    <h1>O projekcie</h1>
+    <p>Sudoku to hobbystyczna wersja klasycznej łamigłówki liczbowej w przeglądarce. Planszę 9×9 trzeba uzupełnić cyframi od 1 do 9 tak, by nie powtarzały się w wierszu, kolumnie ani kwadracie 3×3. Gra ma kilka poziomów trudności, podpowiedzi i tryb ciemny.</p>
+
+    <h2>Prywatność i wygoda</h2>
+    <p>Nie trzeba zakładać konta ani podawać żadnych danych. Wyniki i ustawienia zapisują się tylko w Twojej przeglądarce. Serwis nie używa reklam ani narzędzi analitycznych. Szczegóły znajdziesz w
+      <a href="#prywatnosc">Części II</a>.</p>
+
+    <h2>Masz pytania?</h2>
+    <p>Skorzystaj z <a href="#kontakt">formularza kontaktowego</a> albo napisz na
+      <a href="mailto:global@ivoca.pl">global@ivoca.pl</a>.</p>
+
+    <h2 id="kontakt">Kontakt</h2>
+    <form class="contact" id="contact-form">
+      <label><span>Twój nick <span class="muted">(opcjonalnie)</span></span>
+        <input name="name" maxlength="40" autocomplete="nickname">
+      </label>
+      <label><span>E-mail do odpowiedzi <span class="muted">(opcjonalnie, bez niego nie odpowiemy)</span></span>
+        <input name="email" type="email" maxlength="120" autocomplete="email">
+      </label>
+      <label>Wiadomość
+        <textarea name="message" rows="7" minlength="5" maxlength="2000" required></textarea>
+      </label>
+      <label class="hp" aria-hidden="true">Strona www
+        <input name="website" tabindex="-1" autocomplete="off">
+      </label>
+      <div><button type="submit">Wyślij</button></div>
+      <p class="error" id="contact-error" role="alert"></p>
+      <p class="ok" id="contact-ok" role="status" hidden>Dziękujemy, wiadomość została wysłana.</p>
+      <p class="muted">Do 3 wiadomości dziennie. Zasady przetwarzania danych z formularza opisuje <a href="#prywatnosc-3">Część II, pkt 3</a>.</p>
+    </form>
+
+    <h2 id="regulamin">Regulamin serwisu Sudoku wraz z polityką prywatności</h2>
+    <p class="muted">Obowiązuje od 17.10.2026.</p>
+    <nav class="toc" aria-label="Spis treści">
+      <a href="#regulamin-czesc-1">Część I. Regulamin</a>
+      <a href="#prywatnosc">Część II. Polityka prywatności</a>
+    </nav>
+
+    <h3 id="regulamin-czesc-1">Część I. Regulamin</h3>
+
+    <h4 id="regulamin-1">§1. Postanowienia ogólne</h4>
+    <ol>
+      <li>Regulamin określa zasady korzystania z serwisu Sudoku, dostępnego pod adresem sudoku.ivoca.pl
+        (dalej: „Serwis”). Jest regulaminem, o którym mowa w art. 8 ustawy z dnia 18 lipca 2002 r.
+        o świadczeniu usług drogą elektroniczną.</li>
+      <li>Usługodawcą jest Marek Zduńczuk (dalej: „Usługodawca”). Kontakt: <a href="mailto:global@ivoca.pl">global@ivoca.pl</a>
+        albo <a href="#kontakt">formularz kontaktowy</a>.</li>
+      <li>Serwis jest bezpłatnym projektem hobbystycznym, prowadzonym poza działalnością gospodarczą.</li>
+    </ol>
+
+    <h4 id="regulamin-2">§2. Usługi</h4>
+    <ol>
+      <li>Serwis umożliwia rozwiązywanie plansz Sudoku na kilku poziomach trudności, z podpowiedziami, notatkami i statystykami. Gra działa w całości w przeglądarce.</li>
+      <li>Usługą dodatkową jest formularz kontaktowy.</li>
+      <li>Umowa o świadczenie usług zostaje zawarta z chwilą otwarcia Serwisu i wygasa z chwilą jego opuszczenia.</li>
+    </ol>
+
+    <h4 id="regulamin-3">§3. Wymagania techniczne</h4>
+    <p>Do korzystania z Serwisu potrzebne są dostęp do internetu oraz aktualna przeglądarka z włączoną
+      obsługą JavaScriptu i pamięci lokalnej (localStorage).</p>
+
+    <h4 id="regulamin-4">§4. Zasady korzystania</h4>
+    <ol>
+      <li>Zakazane jest przesyłanie przez formularz kontaktowy treści bezprawnych lub obraźliwych.</li>
+      <li>Zakazane jest obchodzenie zabezpieczeń Serwisu oraz celowe przeciążanie Serwisu i formularza kontaktowego.</li>
+    </ol>
+
+    <h4 id="regulamin-5">§5. Odpowiedzialność</h4>
+    <ol>
+      <li>Serwis nie gwarantuje ciągłej dostępności.</li>
+      <li>Wyniki i ustawienia są zapisane tylko w przeglądarce. Po wyczyszczeniu jej danych albo na innym urządzeniu nie będą dostępne.</li>
+      <li>Powyższe wyłączenia nie dotyczą szkód wyrządzonych umyślnie ani przypadków, w których prawo
+        nie pozwala ograniczyć odpowiedzialności wobec konsumenta.</li>
+    </ol>
+
+    <h4 id="regulamin-6">§6. Reklamacje</h4>
+    <ol>
+      <li>Reklamacje można zgłaszać przez <a href="#kontakt">formularz kontaktowy</a> albo na adres
+        <a href="mailto:global@ivoca.pl">global@ivoca.pl</a>.</li>
+      <li>Zgłoszenie powinno zawierać opis problemu, a jeśli chcesz dostać odpowiedź, także adres e-mail.</li>
+      <li>Usługodawca odpowiada na reklamację w ciągu 14 dni.</li>
+    </ol>
+
+    <h4 id="regulamin-7">§7. Dane osobowe</h4>
+    <p>Zasady przetwarzania danych osobowych opisuje <a href="#prywatnosc">Część II. Polityka prywatności</a>.</p>
+
+    <h4 id="regulamin-8">§8. Postanowienia końcowe</h4>
+    <ol>
+      <li>Usługodawca może zmienić Regulamin z ważnych przyczyn, w szczególności przy zmianie funkcji
+        Serwisu lub przepisów. Zmiany obowiązują od publikacji.</li>
+      <li>W sprawach nieuregulowanych stosuje się prawo polskie. Konsument może skorzystać
+        z pozasądowych sposobów rozwiązywania sporów, np. z pomocy miejskiego lub powiatowego rzecznika
+        konsumentów.</li>
+    </ol>
+
+    <h3 id="prywatnosc">Część II. Polityka prywatności</h3>
+
+    <h4 id="prywatnosc-1">1. Administrator danych</h4>
+    <p>Administratorem danych osobowych jest Marek Zduńczuk, kontakt:
+      <a href="mailto:global@ivoca.pl">global@ivoca.pl</a>.</p>
+
+    <h4 id="prywatnosc-2">2. Skąd pochodzą dane</h4>
+    <p>Gra nie wymaga podawania żadnych danych. Dane podajesz sam tylko w formularzu kontaktowym albo w e-mailu.
+      Część danych technicznych (np. adres IP) przekazuje automatycznie Twoja przeglądarka.</p>
+
+    <h4 id="prywatnosc-3">3. Jakie dane, w jakim celu i jak długo</h4>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Dane</th><th>Cel i podstawa prawna</th><th>Okres przechowywania</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Dane w pamięci przeglądarki (localStorage): statystyki gier i wybrany motyw jasny lub ciemny (<code>sudoku_stats</code>, <code>theme</code>)</td><td>Działanie i wygoda gry, przechowywane wyłącznie na Twoim urządzeniu. Nie trafiają na serwer</td><td>Do wyczyszczenia danych przeglądarki</td></tr>
+          <tr><td>Adres IP i dane techniczne żądań</td><td>Dostarczanie strony i ochrona przed nadużyciami przez Cloudflare (Cloudflare Workers), art. 6 ust. 1 lit. f RODO (uzasadniony interes)</td><td>Zgodnie z zasadami Cloudflare. Serwis sam nie zapisuje adresów IP</td></tr>
+          <tr><td>Adres IP i dane techniczne żądań przy pobieraniu bibliotek i czcionek z zewnętrznych serwerów (cdn.tailwindcss.com, cdn.jsdelivr.net, cdnjs.cloudflare.com, fonts.googleapis.com i fonts.gstatic.com)</td><td>Wyświetlenie gry, art. 6 ust. 1 lit. f RODO (uzasadniony interes)</td><td>Zgodnie z zasadami tych dostawców (pkt 4)</td></tr>
+          <tr><td>Formularz kontaktowy: nick i adres e-mail (oba opcjonalne), treść wiadomości, czas wysłania, adres strony, z której wysłano wiadomość, oraz skrót (hash) adresu IP</td><td>Odpowiedź na pytania i reklamacje oraz limit 3 wiadomości na dobę z jednego adresu, art. 6 ust. 1 lit. f RODO</td><td>Wiadomość przechodzi przez bramkę powiadomień Usługodawcy (powiadom.ivoca.pl, serwer Usługodawcy w Polsce), która przechowuje ją tylko do przekazania dalej: zwykle kilka sekund, gdy komunikator jest niedostępny — do 24 godzin, a wiadomość, której nie udało się przekazać — najwyżej 7 dni. Trafia jako wiadomość na komunikator XMPP Usługodawcy (xmpp.ivoca.pl, ten sam serwer), którego archiwum usuwa ją po 7 dniach, a gdy to niemożliwe — e-mailem do skrzynki Usługodawcy u SEOHOST Sp. z o.o. Kopie w aplikacji komunikatora i w skrzynce e-mail Usługodawca usuwa po załatwieniu sprawy, najpóźniej po 90 dniach. Skrót adresu IP jest trzymany tylko w pamięci bramki przez dobę</td></tr>
+          <tr><td>Adres e-mail i treść korespondencji wysłanej bezpośrednio e-mailem</td><td>Odpowiedź na pytania i reklamacje, art. 6 ust. 1 lit. f RODO</td><td>Do załatwienia sprawy, potem najdłużej 90 dni</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Serwis nie ustawia własnych plików cookies. Cloudflare może ustawić techniczne cookies
+      bezpieczeństwa, niezbędne do ochrony przed botami. Serwis nie stosuje cookies analitycznych
+      ani reklamowych, nie profiluje użytkowników i nie podejmuje wobec nich zautomatyzowanych decyzji
+      (art. 22 RODO).</p>
+
+    <h4 id="prywatnosc-4">4. Odbiorcy danych</h4>
+    <ol>
+      <li>Cloudflare, Inc. hostuje grę (Cloudflare Workers) i pośredniczy w ruchu do niej oraz do bramki powiadomień, przetwarzając adresy IP.</li>
+      <li>Tailwind Labs Inc. (USA) udostępnia z serwera cdn.tailwindcss.com biblioteka stylów Tailwind CSS. Przeglądarka pobiera je przy otwarciu gry, więc dostawca poznaje Twój adres IP i dane techniczne przeglądarki.</li>
+      <li>jsDelivr (Prospect One sp. z o.o., Polska; sieć dostawców CDN, m.in. Cloudflare i Fastly) udostępnia z serwera cdn.jsdelivr.net biblioteki JavaScript. Przeglądarka pobiera je przy otwarciu gry, więc dostawca poznaje Twój adres IP i dane techniczne przeglądarki.</li>
+      <li>Cloudflare, Inc. (USA) udostępnia z serwera cdnjs.cloudflare.com ikony Font Awesome.</li>
+      <li>Google LLC (USA) udostępnia z serwera fonts.googleapis.com i fonts.gstatic.com czcionki Google Fonts. Przeglądarka pobiera je przy otwarciu gry, więc dostawca poznaje Twój adres IP i dane techniczne przeglądarki.</li>
+      <li>Bramka powiadomień i komunikator XMPP działają na serwerze Usługodawcy w Polsce.</li>
+      <li>SEOHOST Sp. z o.o. obsługuje pocztę e-mail Usługodawcy, przez którą przychodzą wiadomości wysłane e-mailem, a zapasowo także wiadomości z formularza kontaktowego.</li>
+      <li>Dane nie są sprzedawane ani udostępniane w celach marketingowych.</li>
+    </ol>
+
+    <h4 id="prywatnosc-5">5. Przekazywanie danych poza EOG</h4>
+    <p>Cloudflare, Inc. i Google LLC mają siedzibę w USA. Przekazywanie danych tym firmom odbywa się na podstawie decyzji Komisji Europejskiej stwierdzającej odpowiedni stopień ochrony (art. 45 RODO), w ramach EU-U.S. Data Privacy Framework, w którym uczestniczą. Serwer cdn.tailwindcss.com należy do Tailwind Labs Inc. (USA); adres IP trafia do niego, gdy przeglądarka pobiera bibliotekę potrzebną do wyświetlenia gry. Stan na 17.10.2026.</p>
+
+    <h4 id="prywatnosc-6">6. Twoje prawa</h4>
+    <ol>
+      <li>Masz prawo dostępu do swoich danych, ich sprostowania, usunięcia, ograniczenia przetwarzania,
+        przenoszenia oraz prawo sprzeciwu wobec przetwarzania opartego na uzasadnionym interesie.</li>
+      <li>Masz prawo wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych.</li>
+      <li>Serwis nie zna Twojej tożsamości. W żądaniu dotyczącym wiadomości z formularza podaj jej przybliżony czas i nick albo adres e-mail.</li>
+    </ol>
+
+    <h4 id="prywatnosc-7">7. Usuwanie danych</h4>
+    <p>Dane w pamięci przeglądarki usuniesz sam, czyszcząc dane strony sudoku.ivoca.pl. Wiadomości z formularza
+      kontaktowego są usuwane zgodnie z pkt 3, a na prośbę wysłaną na <a href="mailto:global@ivoca.pl">global@ivoca.pl</a> wcześniej.</p>
+
+    <h4 id="prywatnosc-8">8. Dobrowolność i zmiany</h4>
+    <p>Podanie danych w formularzu kontaktowym jest dobrowolne. Zmiany polityki prywatności są publikowane
+      na tej stronie razem z datą aktualizacji.</p>
+
+    <h4 id="prywatnosc-9">9. Licencje</h4>
+    <ol>
+      <li>Biblioteka Tailwind CSS jest dostępna na licencji MIT.</li>
+      <li>Ikony Font Awesome Free są dostępne na licencji CC BY 4.0 (ikony), SIL OFL 1.1 (czcionki) i MIT (kod).</li>
+      <li>Biblioteka canvas-confetti jest dostępna na licencji ISC.</li>
+      <li>Czcionka Inter jest dostępna na licencji SIL Open Font License 1.1.</li>
+    </ol>
+
+    <p class="back"><a href="./" class="button">Wróć do gry</a></p>
+  </main>
+
+  <footer class="site-footer">
+    <a href="projekt.html">O projekcie</a> · <a href="projekt.html#regulamin">Regulamin</a> · <a href="projekt.html#prywatnosc">Polityka prywatności</a> · <a href="projekt.html#kontakt">Kontakt</a> · <a href="https://ivoca.pl">Zobacz inne</a>
+  </footer>
+
+  <script>
+    (function () {
+      var form = document.getElementById('contact-form');
+      var err = document.getElementById('contact-error');
+      var ok = document.getElementById('contact-ok');
+      var FALLBACK = 'Nie udało się wysłać wiadomości. Spróbuj później albo napisz na global@ivoca.pl.';
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var btn = form.querySelector('button');
+        err.textContent = '';
+        ok.hidden = true;
+        btn.disabled = true;
+        try {
+          var res = await fetch('https://powiadom.ivoca.pl/v1/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: form.name.value, email: form.email.value,
+              message: form.message.value, website: form.website.value
+            })
+          });
+          var data = {};
+          try { data = await res.json(); } catch (_) {}
+          if (!res.ok || !data.ok) throw new Error(data.error || FALLBACK);
+          form.reset();
+          ok.hidden = false;
+        } catch (x) {
+          err.textContent = x instanceof TypeError ? FALLBACK : x.message;
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

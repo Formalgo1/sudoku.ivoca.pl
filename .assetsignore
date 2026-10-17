@@ -1,0 +1,10 @@
+README.md
+.gitignore
+.assetsignore
+wrangler.jsonc
+.git
+.wrangler
+node_modules
+*.log
+.env
+.DS_Store

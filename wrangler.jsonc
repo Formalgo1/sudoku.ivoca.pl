@@ -1,0 +1,14 @@
+// Sudoku: statyczne pliki na Cloudflare Workers (Worker dark-truth-0072), domena sudoku.ivoca.pl.
+// Publikacja: npx wrangler deploy (wyjątki w .assetsignore)
+{
+  "name": "dark-truth-0072",
+  "compatibility_date": "2026-10-17",
+
+  "assets": { "directory": "." },
+
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "sudoku.ivoca.pl", "custom_domain": true }
+  ]
+}
