@@ -94,9 +94,23 @@ function ivocaStat(event, won) {
     <!-- Główna zawartość -->
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 flex flex-col items-center justify-start gap-4">
 
+        <!-- Wyzwanie dnia: ta sama plansza dla wszystkich, czas liczy serwer, ranking publiczny -->
+        <div id="daily-card" class="w-full max-w-md flex items-center gap-3 bg-white dark:bg-slate-800 p-3 rounded-2xl shadow-sm border border-brand-500/60">
+            <div class="w-9 h-9 rounded-xl bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-500 flex items-center justify-center flex-none">
+                <i class="fa-solid fa-calendar-day"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="font-bold text-sm text-slate-800 dark:text-slate-100">Wyzwanie dnia</div>
+                <div id="daily-info" class="text-xs text-slate-500 dark:text-slate-400">Ta sama plansza dla wszystkich</div>
+            </div>
+            <a href="ranking" class="text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition">Ranking</a>
+            <button id="btn-daily" class="bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl shadow transition active:scale-95 disabled:opacity-50">Graj</button>
+        </div>
+
         <!-- Panel Kontrolny Gry: Trudność, Czas, Błędy -->
         <div class="w-full max-w-md flex items-center justify-between gap-2 bg-white dark:bg-slate-800 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <!-- Wybór Poziomu -->
+            <span id="daily-badge" class="hidden text-sm font-semibold text-brand-600 dark:text-brand-500 px-1">Wyzwanie dnia</span>
             <select id="select-difficulty" class="bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 text-sm font-semibold rounded-xl px-3 py-2 outline-none cursor-pointer border border-transparent focus:border-brand-500">
                 <option value="easy">Łatwy</option>
                 <option value="medium" selected>Średni</option>
@@ -113,7 +127,7 @@ function ivocaStat(event, won) {
                         <i class="fa-solid fa-pause text-xs" id="pause-icon"></i>
                     </button>
                 </div>
-                <div class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                <div id="mistakes-box" class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
                     <i class="fa-solid fa-xmark text-red-500"></i>
                     <span>Błędy: <strong id="mistakes-count" class="text-slate-800 dark:text-slate-100">0/3</strong></span>
                 </div>
@@ -222,6 +236,7 @@ function ivocaStat(event, won) {
                 <ul class="list-disc pl-5 space-y-1">
                     <li><strong>Ołówek:</strong> Włącz tryb ołówka, aby zapisywać małe cyfry w komórkach, które mogą być potencjalnymi rozwiązaniami.</li>
                     <li><strong>Podpowiedź:</strong> Jeśli utkniesz, kliknij żarówkę, aby poznać poprawną cyfrę dla zaznaczonego pola.</li>
+                    <li><strong>Wyzwanie dnia:</strong> codziennie ta sama plansza dla wszystkich. Bez podpowiedzi i limitu błędów — na czerwono zaznaczane są tylko cyfry, które powtarzają się w wierszu, kolumnie lub kwadracie. Czas liczy serwer, a po ukończeniu możesz zapisać wynik na publicznej liście.</li>
                     <li><strong>Klawiatura:</strong> Możesz grać używając klawiatury komputera – cyfry 1-9 wpisują wartość, Backspace/Delete usuwa, a strzałki pozwalają nawigować.</li>
                 </ul>
             </div>
@@ -261,7 +276,8 @@ function ivocaStat(event, won) {
         <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 text-center transform transition-all scale-95">
             <div id="gameover-icon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3"></div>
             <h2 id="gameover-title" class="text-2xl font-extrabold mb-1"></h2>
-            <p id="gameover-desc" class="text-sm text-slate-500 dark:text-slate-400 mb-6"></p>
+ <p id="gameover-desc" class="text-sm text-slate-500 dark:text-slate-400 mb-6"></p>
+            <div id="gameover-daily" class="hidden text-left bg-slate-100 dark:bg-slate-700/50 rounded-2xl p-4 mb-4 text-sm"></div>
             
             <button id="btn-modal-new-game" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-brand-500/30 transition active:scale-95">
                 Zagraj ponownie
@@ -296,6 +312,180 @@ function ivocaStat(event, won) {
             isGameOver: false
         };
 
+        // --- WYZWANIE DNIA (API /api/wyzwanie/*, plansza od serwera, rozwiązania klient nie zna) ---
+        const API = '/api/wyzwanie/';
+        const sess = {
+            get(k) { try { const v = sessionStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+            set(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+        };
+        function api(path, body) {
+            return fetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
+                .then(r => r.json().catch(() => ({})).then(d => {
+                    if (!r.ok) { const e = new Error(d.blad || `Błąd serwera (${r.status})`); e.status = r.status; e.dane = d; throw e; }
+                    return d;
+                }), () => { throw new Error('Brak połączenia z serwerem — spróbuj jeszcze raz.'); });
+        }
+        function dzisPL() {
+            try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+            catch (e) { return new Date().toISOString().slice(0, 10); }
+        }
+        function fmtDzien(d) { const p = d.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; }
+        let dailyBusy = false;
+
+        function saveDaily() {
+            const d = state.daily; if (!d) return;
+            d.current = state.boardCurrent.map(r => r.join('')).join('');
+            sess.set('sudoku-wyzwanie', d);
+        }
+        function loadDaily() {
+            const d = sess.get('sudoku-wyzwanie');
+            return d && d.dzien === dzisPL() ? d : null;
+        }
+        function setDailyUI(active) {
+            document.getElementById('select-difficulty').classList.toggle('hidden', active);
+            document.getElementById('daily-badge').classList.toggle('hidden', !active);
+            document.getElementById('mistakes-box').classList.toggle('hidden', active);
+            document.getElementById('btn-pause').classList.toggle('hidden', active);
+            const hint = document.getElementById('btn-hint');
+            hint.disabled = active;
+            hint.classList.toggle('opacity-40', active);
+            hint.title = active ? 'W wyzwaniu dnia nie ma podpowiedzi' : '';
+            updateDailyCard();
+        }
+        function updateDailyCard() {
+            const d = (state.daily && state.daily.dzien === dzisPL()) ? state.daily : loadDaily();
+            const info = document.getElementById('daily-info'), btn = document.getElementById('btn-daily');
+            if (!d) { info.innerText = 'Ta sama plansza dla wszystkich'; btn.innerText = 'Graj'; btn.disabled = false; return; }
+            if (d.koniec) { info.innerText = `Rozegrane dziś · czas ${formatTime(Math.floor(d.czas / 1000))}`; btn.innerText = 'Wynik'; btn.disabled = false; return; }
+            const trwa = state.daily === d || (state.daily && state.daily.sesja === d.sesja);
+            info.innerText = `${fmtDzien(d.dzien)} · ${trwa ? 'w trakcie' : 'rozpoczęte — dokończ'}`;
+            btn.innerText = trwa ? 'Trwa' : 'Dokończ';
+            btn.disabled = trwa;
+        }
+
+        function applyDaily(d) {
+            state.daily = d;
+            state.boardSolution = null;
+            state.boardInitial = Array.from({ length: 9 }, (_, r) => Array.from({ length: 9 }, (_, c) => +d.plansza[r * 9 + c]));
+            const cur = d.current || d.plansza;
+            state.boardCurrent = Array.from({ length: 9 }, (_, r) => Array.from({ length: 9 }, (_, c) => +cur[r * 9 + c]));
+            state.boardNotes = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+            state.selectedCell = null;
+            state.mistakes = 0;
+            state.history = [];
+            state.redoStack = [];
+            state.isGameOver = !!d.koniec;
+            if (state.isPaused) togglePause();
+            stopTimer();
+            state.timer = Math.floor((d.koniec ? d.czas : Date.now() - d.localStart) / 1000);
+            document.getElementById('timer-text').innerText = formatTime(state.timer);
+            if (!d.koniec) {
+                state.timerInterval = setInterval(() => {
+                    state.timer = Math.floor((Date.now() - d.localStart) / 1000);
+                    document.getElementById('timer-text').innerText = formatTime(state.timer);
+                }, 1000);
+            }
+            setDailyUI(true);
+            renderBoard();
+            if (d.koniec) showDailyEnd();
+        }
+
+        function startDaily() {
+            if (dailyBusy) return;
+            const zapis = loadDaily();
+            if (zapis) { applyDaily(zapis); return; }
+            dailyBusy = true;
+            document.getElementById('btn-daily').disabled = true;
+            api('start').then(d => {
+                ivocaStat('start');
+                applyDaily({ sesja: d.sesja, dzien: d.dzien, plansza: d.plansza.plansza, localStart: Date.now() });
+                saveDaily();
+            }).catch(e => {
+                alert(e.message);
+                if (!state.boardInitial.length) startNewGame();
+            }).finally(() => { dailyBusy = false; updateDailyCard(); });
+        }
+
+        // cyfra powtarza się w wierszu, kolumnie albo kwadracie 3x3
+        function hasConflict(r, c) {
+            const v = state.boardCurrent[r][c];
+            if (!v) return false;
+            for (let i = 0; i < 9; i++) {
+                if (i !== c && state.boardCurrent[r][i] === v) return true;
+                if (i !== r && state.boardCurrent[i][c] === v) return true;
+                const br = 3 * Math.floor(r / 3) + Math.floor(i / 3), bc = 3 * Math.floor(c / 3) + (i % 3);
+                if ((br !== r || bc !== c) && state.boardCurrent[br][bc] === v) return true;
+            }
+            return false;
+        }
+
+        function submitDaily() {
+            const d = state.daily;
+            if (!d || dailyBusy || d.koniec) return;
+            dailyBusy = true;
+            api('ruch', { sesja: d.sesja, wynik: state.boardCurrent.map(r => r.join('')).join('') }).then(r => {
+                if (!r.poprawne) { alert('Serwer nie przyjął rozwiązania — sprawdź planszę.'); return; }
+                d.koniec = true; d.czas = r.czas;
+                state.isGameOver = true;
+                stopTimer();
+                state.timer = Math.floor(r.czas / 1000);
+                document.getElementById('timer-text').innerText = formatTime(state.timer);
+                saveDaily();
+                ivocaStat('finish', true);
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                showDailyEnd();
+                updateDailyCard();
+            }).catch(e => {
+                alert(e.message);
+                if (e.status === 404 || e.status === 410) { try { sessionStorage.removeItem('sudoku-wyzwanie'); } catch (x) {} state.daily = null; startNewGame(); }
+            }).finally(() => { dailyBusy = false; });
+        }
+
+        function showDailyEnd() {
+            const d = state.daily;
+            const modal = document.getElementById('modal-gameover');
+            const icon = document.getElementById('gameover-icon');
+            icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400';
+            icon.innerHTML = '<i class="fa-solid fa-calendar-check"></i>';
+            document.getElementById('gameover-title').innerText = 'Wyzwanie dnia ukończone!';
+            document.getElementById('gameover-desc').innerText = `Plansza z ${fmtDzien(d.dzien)} rozwiązana w czasie ${formatTime(Math.floor(d.czas / 1000))}.`;
+            document.getElementById('btn-modal-new-game').innerText = 'Zwykła gra';
+            const box = document.getElementById('gameover-daily');
+            box.classList.remove('hidden');
+            box.innerHTML = '';
+            const p = (cls, text) => { const e = document.createElement('p'); e.className = cls; e.innerText = text; box.appendChild(e); return e; };
+            const link = () => { const a = document.createElement('a'); a.href = 'ranking?dzien=' + d.dzien; a.className = 'block w-full text-center mt-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 font-semibold py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition'; a.innerText = 'Zobacz ranking'; box.appendChild(a); };
+            if (d.zapisano || sess.get('wyzwanie-zapisano') === d.dzien) {
+                p('font-semibold text-slate-800 dark:text-slate-100', d.zapisano || 'Twój dzisiejszy wynik jest już na liście.');
+                link();
+            } else if (d.odrzucono) {
+                p('text-slate-500 dark:text-slate-400', 'Wynik nie został zapisany.');
+                link();
+            } else {
+                p('font-semibold text-slate-800 dark:text-slate-100 mb-1', 'Czy chcesz zapisać wynik na publicznie dostępnej liście i porównać wyniki z innymi graczami?');
+                p('text-xs text-slate-500 dark:text-slate-400', 'Na liście pojawi się tylko losowy identyfikator nadany przez serwer i czas. Identyfikator pamięta ta karta przeglądarki do jej zamknięcia.');
+                const row = document.createElement('div'); row.className = 'grid grid-cols-2 gap-2 mt-3';
+                const no = document.createElement('button'); no.className = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 font-semibold py-2.5 rounded-xl transition'; no.innerText = 'Nie, dziękuję';
+                const yes = document.createElement('button'); yes.className = 'bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl shadow transition disabled:opacity-50'; yes.innerText = 'Zapisz wynik';
+                no.addEventListener('click', () => { d.odrzucono = true; saveDaily(); showDailyEnd(); });
+                yes.addEventListener('click', () => {
+                    yes.disabled = no.disabled = true;
+                    const ja = sess.get('wyzwanie-gracz') || {};
+                    api('zapisz', { sesja: d.sesja, gracz: ja.gracz, token: ja.token }).then(r => {
+                        sess.set('wyzwanie-gracz', { gracz: r.gracz, token: r.token });
+                        sess.set('wyzwanie-zapisano', r.dzien);
+                        d.zapisano = `Zapisano jako #${r.gracz} · miejsce ${r.miejsce} z ${r.liczba}.`;
+                        saveDaily(); showDailyEnd();
+                    }).catch(e => {
+                        if (e.status === 409 && e.dane && e.dane.gracz) { sess.set('wyzwanie-zapisano', e.dane.dzien); d.zapisano = e.message; saveDaily(); showDailyEnd(); return; }
+                        alert(e.message); yes.disabled = no.disabled = false;
+                    });
+                });
+                row.appendChild(no); row.appendChild(yes); box.appendChild(row);
+            }
+            modal.classList.remove('hidden');
+        }
+
         // Statystyki
         let stats = JSON.parse(localStorage.getItem('sudoku_stats')) || {
             easy: { played: 0, won: 0, bestTime: null },
@@ -309,7 +499,8 @@ function ivocaStat(event, won) {
             initTheme();
             initBoardUI();
             bindEvents();
-            startNewGame();
+            // link z ivoca.pl: sudoku.ivoca.pl/?wyzwanie od razu otwiera wyzwanie dnia
+            if (/[?&]wyzwanie\b/.test(location.search)) startDaily(); else startNewGame();
         });
 
         // Motyw Ciemny / Jasny
@@ -435,6 +626,10 @@ function ivocaStat(event, won) {
         // --- OBSŁUGA STANU GRY & RENDEROWANIE ---
 
         function startNewGame() {
+            if (state.daily) { saveDaily(); state.daily = null; }
+            setDailyUI(false);
+            document.getElementById('gameover-daily').classList.add('hidden');
+            document.getElementById('btn-modal-new-game').innerText = 'Zagraj ponownie';
             ivocaStat('start');
             state.difficulty = document.getElementById('select-difficulty').value;
             const { puzzle, solution } = generateSudoku(state.difficulty);
@@ -515,8 +710,8 @@ function ivocaStat(event, won) {
                         if (isInitial) {
                             valSpan.className = 'cell-val z-10 font-bold text-slate-900 dark:text-slate-100';
                         } else {
-                            // Sprawdzanie błędów
-                            const isError = state.autoCheck && val !== state.boardSolution[r][c];
+                            // Sprawdzanie błędów (w wyzwaniu dnia: tylko powtórzenia — rozwiązania nie znamy)
+                            const isError = state.autoCheck && (state.daily ? hasConflict(r, c) : val !== state.boardSolution[r][c]);
                             if (isError) {
                                 valSpan.className = 'cell-val z-10 font-bold text-red-500 dark:text-red-400';
                             } else {
@@ -586,8 +781,10 @@ function ivocaStat(event, won) {
 
                     state.boardCurrent[row][col] = num;
 
-                    // Obsługa błędu
-                    if (num !== state.boardSolution[row][col]) {
+                    if (state.daily) {
+                        if (!hasConflict(row, col)) autoCleanNotes(row, col, num);
+                    } else if (num !== state.boardSolution[row][col]) {
+                        // Obsługa błędu
                         state.mistakes++;
                         document.getElementById('mistakes-count').innerText = `${state.mistakes}/${state.maxMistakes}`;
                         
@@ -603,6 +800,7 @@ function ivocaStat(event, won) {
             }
 
             renderBoard();
+            if (state.daily) saveDaily();
             checkWinCondition();
         }
 
@@ -617,7 +815,7 @@ function ivocaStat(event, won) {
         }
 
         function giveHint() {
-            if (!state.selectedCell || state.isGameOver || state.isPaused) return;
+            if (state.daily || !state.selectedCell || state.isGameOver || state.isPaused) return;
             const { row, col } = state.selectedCell;
 
             if (state.boardInitial[row][col] !== 0) return;
@@ -660,6 +858,7 @@ function ivocaStat(event, won) {
 
             document.getElementById('mistakes-count').innerText = `${state.mistakes}/${state.maxMistakes}`;
             renderBoard();
+            if (state.daily) saveDaily();
         }
 
         function redo() {
@@ -679,9 +878,17 @@ function ivocaStat(event, won) {
 
             document.getElementById('mistakes-count').innerText = `${state.mistakes}/${state.maxMistakes}`;
             renderBoard();
+            if (state.daily) { saveDaily(); checkWinCondition(); }
         }
 
         function checkWinCondition() {
+            if (state.daily) {
+                for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) {
+                    if (!state.boardCurrent[r][c] || hasConflict(r, c)) return;
+                }
+                submitDaily();
+                return;
+            }
             for (let r = 0; r < 9; r++) {
                 for (let c = 0; c < 9; c++) {
                     if (state.boardCurrent[r][c] !== state.boardSolution[r][c]) {
@@ -844,6 +1051,8 @@ function ivocaStat(event, won) {
                     document.querySelectorAll('.fixed').forEach(m => m.classList.add('hidden'));
                 });
             });
+
+            document.getElementById('btn-daily').addEventListener('click', startDaily);
 
             document.getElementById('btn-modal-new-game').addEventListener('click', () => {
                 document.getElementById('modal-gameover').classList.add('hidden');

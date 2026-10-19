@@ -9,3 +9,8 @@ node_modules
 .env
 .DS_Store
 build
+src
+migrations
+test
+package.json
+package-lock.json

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ranking wyzwania dnia — Sudoku</title>
+<meta name="description" content="Publiczna lista wyników wyzwania dnia w Sudoku: ta sama plansza dla wszystkich graczy.">
+<script>try { var t = localStorage.getItem('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root { --paper:#f8fafc; --paper-2:#f1f5f9; --card:#ffffff; --ink:#1e293b; --ink-soft:#64748b; --line:#e2e8f0; --brand:#2563eb; --hl:#2563eb; --hl-ink:#ffffff; --badge:#fbbf24; --sans:'Inter', system-ui, sans-serif; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper:#0f172a; --paper-2:#1e293b; --card:#1e293b; --ink:#f1f5f9; --ink-soft:#94a3b8; --line:#334155; --brand:#60a5fa; --hl:#3b82f6; } }
+:root[data-theme="dark"] { --paper:#0f172a; --paper-2:#1e293b; --card:#1e293b; --ink:#f1f5f9; --ink-soft:#94a3b8; --line:#334155; --brand:#60a5fa; --hl:#3b82f6; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 15px/1.5 var(--sans); }
+a { color: var(--brand); }
+.wrap { max-width: 480px; margin: 0 auto; padding: 24px 16px 40px; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; font: 600 14px var(--sans); padding: .55em .9em; border-radius: 12px; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--ink); text-decoration: none; }
+.btn.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+.btn:disabled { opacity: .4; cursor: default; }
+h1 { font-size: 1.4rem; margin: 0 0 4px; letter-spacing: -.02em; }
+.sub { color: var(--ink-soft); margin: 0 0 16px; }
+.days { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.days .btn { width: 42px; padding: .55em 0; font-size: 18px; }
+.days b { font-size: 1.05rem; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 9px 12px; text-align: left; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); background: var(--paper-2); }
+td { border-top: 1px solid var(--line); }
+td.n, th.n { text-align: right; width: 1%; white-space: nowrap; }
+.id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .03em; }
+tr.ty td { background: var(--hl); color: var(--hl-ink); font-weight: 700; }
+tr.gap td { text-align: center; color: var(--ink-soft); padding: 4px; }
+.badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--badge); color: #1e293b; font-size: 12px; }
+.empty { padding: 18px 14px; color: var(--ink-soft); text-align: center; margin: 0; }
+.note { color: var(--ink-soft); font-size: 13px; margin-top: 14px; }
+footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="btn" href="./">← Sudoku</a>
+    <a class="btn primary" href="./?wyzwanie">Zagraj w wyzwanie</a>
+  </div>
+  <h1>Ranking wyzwania dnia</h1>
+  <p class="sub">Ta sama plansza dla wszystkich. Kolejność: krótszy czas rozwiązania.</p>
+
+  <div class="days">
+    <button class="btn" id="prev" aria-label="Poprzedni dzień">‹</button>
+    <b id="day" aria-live="polite"></b>
+    <button class="btn" id="next" aria-label="Następny dzień">›</button>
+  </div>
+
+  <div class="card" id="list"><p class="empty">Wczytuję…</p></div>
+  <p class="note" id="me"></p>
+  <p class="note">Na liście są tylko losowe identyfikatory nadane przez serwer — bez imion, adresów e-mail i innych danych. Wynik trafia tu wyłącznie wtedy, gdy gracz sam go zapisze.</p>
+
+  <footer><a href="projekt.html">O projekcie</a> · <a href="projekt.html#prywatnosc">Polityka prywatności</a> · <a href="https://ivoca.pl">Zobacz inne</a></footer>
+</div>
+<script>
+(function () {
+  'use strict';
+  var GRA_PROBY = false;  // Sudoku: liczy się tylko czas
+  var START = '2026-10-19';
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function fmtCzas(ms) { var s = Math.floor(ms / 1000), m = Math.floor(s / 60); s = s % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+  function fmtDzien(d) { var p = d.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }
+  function przesun(d, n) { var t = new Date(d + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); }
+  var ja = null;
+  try { ja = JSON.parse(sessionStorage.getItem('wyzwanie-gracz') || 'null'); } catch (e) {}
+  var m = /[?&]dzien=(\d{4}-\d{2}-\d{2})/.exec(location.search);
+  var dzien = m ? m[1] : null, dzis = null;
+
+  $('me').textContent = ja && ja.gracz ? 'Twój identyfikator w tej karcie przeglądarki: #' + ja.gracz + ' (Twój wynik jest podświetlony).' : '';
+
+  function wczytaj() {
+    var list = $('list');
+    list.innerHTML = '<p class="empty">Wczytuję…</p>';
+    var h = {};
+    if (ja && ja.gracz) h['X-Gracz'] = ja.gracz;
+    fetch('/api/wyzwanie/ranking' + (dzien ? '?dzien=' + dzien : ''), { headers: h, cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function (d) {
+        dzien = d.dzien; dzis = d.dzis;
+        $('day').textContent = (dzien === dzis ? 'Dziś, ' : '') + fmtDzien(dzien);
+        $('prev').disabled = dzien <= START;
+        $('next').disabled = dzien >= dzis;
+        history.replaceState(null, '', dzien === dzis ? 'ranking' : 'ranking?dzien=' + dzien);
+        list.innerHTML = '';
+        if (!d.wiersze.length) {
+          list.appendChild(el('p', 'empty', dzien === dzis ? 'Nikt jeszcze nie zapisał dzisiejszego wyniku. Bądź pierwszy!' : 'Brak zapisanych wyników z tego dnia.'));
+          return;
+        }
+        var t = el('table'), head = el('tr');
+        head.appendChild(el('th', 'n', '#')); head.appendChild(el('th', '', 'Gracz'));
+        if (GRA_PROBY) head.appendChild(el('th', 'n', 'Próby'));
+        head.appendChild(el('th', 'n', 'Czas'));
+        var thead = el('thead'); thead.appendChild(head); t.appendChild(thead);
+        var tb = el('tbody'), poprz = 0;
+        d.wiersze.forEach(function (w) {
+          if (w.miejsce > poprz + 1 && poprz >= 100) { var g = el('tr', 'gap'); var c = el('td', '', '…'); c.colSpan = GRA_PROBY ? 4 : 3; g.appendChild(c); tb.appendChild(g); }
+          poprz = w.miejsce;
+          var tr = el('tr', w.ty ? 'ty' : '');
+          tr.appendChild(el('td', 'n', String(w.miejsce)));
+          var who = el('td'); who.appendChild(el('span', 'id', '#' + w.gracz));
+          if (w.ty) who.appendChild(el('span', 'badge', 'To Ty'));
+          tr.appendChild(who);
+          if (GRA_PROBY) tr.appendChild(el('td', 'n', String(w.proby)));
+          tr.appendChild(el('td', 'n', fmtCzas(w.czas)));
+          if (w.ty) tr.setAttribute('aria-current', 'true');
+          tb.appendChild(tr);
+        });
+        t.appendChild(tb); list.appendChild(t);
+        var moj = list.querySelector('tr.ty');
+        if (moj && moj.scrollIntoView) moj.scrollIntoView({ block: 'nearest' });
+        if (d.liczba > d.wiersze.length) list.appendChild(el('p', 'empty', 'Pokazano pierwszą setkę z ' + d.liczba + ' wyników.'));
+      })
+      .catch(function () { list.innerHTML = ''; list.appendChild(el('p', 'empty', 'Nie udało się wczytać listy. Spróbuj odświeżyć stronę.')); });
+  }
+  $('prev').addEventListener('click', function () { if (dzien) { dzien = przesun(dzien, -1); wczytaj(); } });
+  $('next').addEventListener('click', function () { if (dzien) { dzien = przesun(dzien, 1); wczytaj(); } });
+  wczytaj();
+})();
+</script>
+</body>
+</html>

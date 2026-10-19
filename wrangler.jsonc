@@ -1,11 +1,30 @@
-// Sudoku: statyczne pliki na Cloudflare Workers (Worker dark-truth-0072), domena sudoku.ivoca.pl.
-// Publikacja: npx wrangler deploy (wyjątki w .assetsignore)
+// Konfiguracja Cloudflare Workers dla Sudoku.
+// Statyczne pliki (assets) + skrypt src/worker.mjs tylko dla /api/* (wyzwanie dnia, baza D1 „wyzwanie-dnia”
+// wspólna z Szyfrantem). Publikacja: npx wrangler deploy. Schemat bazy: migrations/ (npx wrangler d1 migrations apply wyzwanie-dnia --remote)
 {
   "name": "dark-truth-0072",
-  "compatibility_date": "2026-10-17",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-05-01",
 
-  "assets": { "directory": "." },
+  // Wysyłany jest cały katalog projektu; wyjątki są w .assetsignore
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
 
+  "d1_databases": [
+    { "binding": "DB", "database_name": "wyzwanie-dnia", "database_id": "74e24120-ba92-4ed9-add7-3da4a6d8c693" }
+  ],
+
+  // Limit zapytań POST z jednego adresu (liczy Cloudflare, adresów nie zapisujemy)
+  "ratelimits": [
+    { "name": "LIMIT", "namespace_id": "1902", "simple": { "limit": 60, "period": 60 } }
+  ],
+
+  "observability": { "enabled": false },
+
+  // Tylko własna domena: bez *.workers.dev i adresów podglądu
   "workers_dev": false,
   "preview_urls": false,
   "routes": [
