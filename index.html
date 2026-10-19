@@ -463,10 +463,10 @@ function ivocaStat(event, won) {
                 link();
             } else {
                 p('font-semibold text-slate-800 dark:text-slate-100 mb-1', 'Czy chcesz zapisać wynik na publicznie dostępnej liście i porównać wyniki z innymi graczami?');
-                p('text-xs text-slate-500 dark:text-slate-400', 'Na liście pojawi się tylko losowy identyfikator nadany przez serwer i czas. Identyfikator pamięta ta karta przeglądarki do jej zamknięcia.');
+                p('text-xs text-slate-500 dark:text-slate-400', 'Na liście pojawi się tylko losowy identyfikator nadany przez serwer i czas. Identyfikator pamięta tę kartę przeglądarki do jej zamknięcia.');
                 const row = document.createElement('div'); row.className = 'grid grid-cols-2 gap-2 mt-3';
                 const no = document.createElement('button'); no.className = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 font-semibold py-2.5 rounded-xl transition'; no.innerText = 'Nie, dziękuję';
-                const yes = document.createElement('button'); yes.className = 'bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl shadow transition disabled:opacity-50'; yes.innerText = 'Zapisz wynik';
+                const yes = document.createElement('button'); yes.className = 'bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl shadow transition disabled:opacity-50'; yes.innerText = 'Opublikuj wynik';
                 no.addEventListener('click', () => { d.odrzucono = true; saveDaily(); showDailyEnd(); });
                 yes.addEventListener('click', () => {
                     yes.disabled = no.disabled = true;
