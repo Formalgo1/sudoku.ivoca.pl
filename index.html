@@ -147,6 +147,13 @@ function ivocaStat(event, won) {
                     <!-- Komórki generowane dynamicznie przez JS -->
                 </div>
 
+                <!-- Odliczanie przed wyzwaniem dnia (plansza ukryta, czas jeszcze nie biegnie) -->
+                <div id="countdown-overlay" class="absolute inset-0 bg-white dark:bg-slate-900 flex flex-col items-center justify-center gap-2 hidden z-30 rounded-2xl" role="timer" aria-live="assertive">
+                    <p class="text-slate-600 dark:text-slate-300 font-semibold">Wyzwanie dnia zaczyna się za</p>
+                    <span id="countdown-num" class="text-8xl font-extrabold text-red-600 dark:text-red-500 tabular-nums leading-none">15</span>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Czas zacznie biec po odliczaniu</p>
+                </div>
+
                 <!-- Nakładka Pauzy -->
                 <div id="pause-overlay" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 hidden z-20 rounded-2xl">
                     <i class="fa-solid fa-circle-play text-5xl text-brand-500"></i>
@@ -236,7 +243,7 @@ function ivocaStat(event, won) {
                 <ul class="list-disc pl-5 space-y-1">
                     <li><strong>Ołówek:</strong> Włącz tryb ołówka, aby zapisywać małe cyfry w komórkach, które mogą być potencjalnymi rozwiązaniami.</li>
                     <li><strong>Podpowiedź:</strong> Jeśli utkniesz, kliknij żarówkę, aby poznać poprawną cyfrę dla zaznaczonego pola.</li>
-                    <li><strong>Wyzwanie dnia:</strong> codziennie ta sama plansza dla wszystkich. Bez podpowiedzi i limitu błędów — na czerwono zaznaczane są tylko cyfry, które powtarzają się w wierszu, kolumnie lub kwadracie. Czas liczy serwer, a po ukończeniu możesz zapisać wynik na publicznej liście.</li>
+                    <li><strong>Wyzwanie dnia:</strong> codziennie ta sama plansza dla wszystkich. Zaczyna się po 15 sekundach odliczania, potem biegnie czas. Bez podpowiedzi i limitu błędów — na czerwono zaznaczane są tylko cyfry, które powtarzają się w wierszu, kolumnie lub kwadracie. Czas liczy serwer, a po ukończeniu możesz zapisać wynik na publicznej liście.</li>
                     <li><strong>Klawiatura:</strong> Możesz grać używając klawiatury komputera – cyfry 1-9 wpisują wartość, Backspace/Delete usuwa, a strzałki pozwalają nawigować.</li>
                 </ul>
             </div>
@@ -377,14 +384,23 @@ function ivocaStat(event, won) {
             state.isGameOver = !!d.koniec;
             if (state.isPaused) togglePause();
             stopTimer();
-            state.timer = Math.floor((d.koniec ? d.czas : Date.now() - d.localStart) / 1000);
-            document.getElementById('timer-text').innerText = formatTime(state.timer);
-            if (!d.koniec) {
-                state.timerInterval = setInterval(() => {
-                    state.timer = Math.floor((Date.now() - d.localStart) / 1000);
-                    document.getElementById('timer-text').innerText = formatTime(state.timer);
-                }, 1000);
-            }
+            const overlay = document.getElementById('countdown-overlay');
+            const tick = () => {
+                if (state.daily !== d) return;
+                const zostalo = d.localStart - Date.now();
+                state.countdown = !d.koniec && zostalo > 0;
+                overlay.classList.toggle('hidden', !state.countdown);
+                if (state.countdown) {
+                    // odliczanie na czerwono; czas gry liczy serwer dopiero od jego końca
+                    document.getElementById('countdown-num').innerText = Math.ceil(zostalo / 1000);
+                    state.timer = 0;
+                } else {
+                    state.timer = Math.floor((d.koniec ? d.czas : Date.now() - d.localStart) / 1000);
+                }
+                document.getElementById('timer-text').innerText = formatTime(state.timer);
+            };
+            tick();
+            if (!d.koniec) state.timerInterval = setInterval(tick, 200);
             setDailyUI(true);
             renderBoard();
             if (d.koniec) showDailyEnd();
@@ -398,7 +414,7 @@ function ivocaStat(event, won) {
             document.getElementById('btn-daily').disabled = true;
             api('start').then(d => {
                 ivocaStat('start');
-                applyDaily({ sesja: d.sesja, dzien: d.dzien, plansza: d.plansza.plansza, localStart: Date.now() });
+                applyDaily({ sesja: d.sesja, dzien: d.dzien, plansza: d.plansza.plansza, localStart: Date.now() + (d.odliczanie || 0) });
                 saveDaily();
             }).catch(e => {
                 alert(e.message);
@@ -463,7 +479,7 @@ function ivocaStat(event, won) {
                 link();
             } else {
                 p('font-semibold text-slate-800 dark:text-slate-100 mb-1', 'Czy chcesz zapisać wynik na publicznie dostępnej liście i porównać wyniki z innymi graczami?');
-                p('text-xs text-slate-500 dark:text-slate-400', 'Na liście pojawi się tylko losowy identyfikator nadany przez serwer i czas. Identyfikator pamięta tę kartę przeglądarki do jej zamknięcia.');
+                p('text-xs text-slate-500 dark:text-slate-400', 'Na liście pojawi się tylko losowy identyfikator nadany przez serwer i czas. Ta karta przeglądarki pamięta identyfikator do jej zamknięcia.');
                 const row = document.createElement('div'); row.className = 'grid grid-cols-2 gap-2 mt-3';
                 const no = document.createElement('button'); no.className = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 font-semibold py-2.5 rounded-xl transition'; no.innerText = 'Nie, dziękuję';
                 const yes = document.createElement('button'); yes.className = 'bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl shadow transition disabled:opacity-50'; yes.innerText = 'Opublikuj wynik';
@@ -500,7 +516,11 @@ function ivocaStat(event, won) {
             initBoardUI();
             bindEvents();
             // link z ivoca.pl: sudoku.ivoca.pl/?wyzwanie od razu otwiera wyzwanie dnia
-            if (/[?&]wyzwanie\b/.test(location.search)) startDaily(); else startNewGame();
+            if (/[?&]wyzwanie\b/.test(location.search)) {
+                // karta otwarta w tle nie zaczyna wyzwania, dopóki nie stanie się widoczna
+                const go = () => { if (!document.hidden) { document.removeEventListener('visibilitychange', go); startDaily(); } };
+                if (!document.hidden) startDaily(); else document.addEventListener('visibilitychange', go);
+            } else startNewGame();
         });
 
         // Motyw Ciemny / Jasny
@@ -627,6 +647,8 @@ function ivocaStat(event, won) {
 
         function startNewGame() {
             if (state.daily) { saveDaily(); state.daily = null; }
+            state.countdown = false;
+            document.getElementById('countdown-overlay').classList.add('hidden');
             setDailyUI(false);
             document.getElementById('gameover-daily').classList.add('hidden');
             document.getElementById('btn-modal-new-game').innerText = 'Zagraj ponownie';
@@ -739,7 +761,7 @@ function ivocaStat(event, won) {
         }
 
         function selectCell(r, c) {
-            if (state.isGameOver || state.isPaused) return;
+            if (state.isGameOver || state.isPaused || state.countdown) return;
             state.selectedCell = { row: r, col: c };
             renderBoard();
         }
@@ -747,7 +769,7 @@ function ivocaStat(event, won) {
         // --- AKCJE GRACZA (Wpisywanie, Ołówek, Gumka, Undo) ---
 
         function handleInput(num) {
-            if (!state.selectedCell || state.isGameOver || state.isPaused) return;
+            if (!state.selectedCell || state.isGameOver || state.isPaused || state.countdown) return;
             const { row, col } = state.selectedCell;
 
             // Nie można modyfikować pól startowych
@@ -842,7 +864,7 @@ function ivocaStat(event, won) {
         }
 
         function undo() {
-            if (state.history.length === 0 || state.isGameOver || state.isPaused) return;
+            if (state.history.length === 0 || state.isGameOver || state.isPaused || state.countdown) return;
 
             const currentSnapshot = {
                 boardCurrent: state.boardCurrent.map(r => [...r]),
@@ -862,7 +884,7 @@ function ivocaStat(event, won) {
         }
 
         function redo() {
-            if (state.redoStack.length === 0 || state.isGameOver || state.isPaused) return;
+            if (state.redoStack.length === 0 || state.isGameOver || state.isPaused || state.countdown) return;
 
             const currentSnapshot = {
                 boardCurrent: state.boardCurrent.map(r => [...r]),
@@ -997,7 +1019,7 @@ function ivocaStat(event, won) {
 
             // Klawiatura fizyczna
             document.addEventListener('keydown', (e) => {
-                if (state.isGameOver || state.isPaused) return;
+                if (state.isGameOver || state.isPaused || state.countdown) return;
 
                 if (e.key >= '1' && e.key <= '9') {
                     handleInput(parseInt(e.key));

@@ -20,7 +20,7 @@ migrations/      schemat bazy D1 „wyzwanie-dnia” (wspólnej z Szyfrantem)
 - Karta nad panelem gry, link bezpośredni `/?wyzwanie`, ranking `/ranking` (`?dzien=RRRR-MM-DD`).
 - Plansza dnia z tabeli `plansze` (wygenerowane na zapas z kontrolą jednoznaczności, 46 pustych pól). Gdy zabraknie dnia, Worker generuje awaryjnie planszę bez tej kontroli. Dogenerowanie (INSERT OR IGNORE):
   `node build/plansze-wyzwania.mjs RRRR-MM-DD 1100 > /tmp/plansze.sql && npx wrangler d1 execute wyzwanie-dnia --remote --file /tmp/plansze.sql`
-- Przeglądarka nie dostaje rozwiązania: w wyzwaniu nie ma podpowiedzi ani limitu błędów, na czerwono są tylko powtórzenia w wierszu/kolumnie/kwadracie. Pełna plansza bez powtórzeń idzie do `POST /api/wyzwanie/ruch`, serwer sprawdza i liczy czas od startu. Bez pauzy (czas biegnie po stronie serwera).
+- Przeglądarka nie dostaje rozwiązania: w wyzwaniu nie ma podpowiedzi ani limitu błędów, na czerwono są tylko powtórzenia w wierszu/kolumnie/kwadracie. Pełna plansza bez powtórzeń idzie do `POST /api/wyzwanie/ruch`, serwer sprawdza i liczy czas od startu. Bez pauzy (czas biegnie po stronie serwera). Przed startem 15 s odliczania na czerwono (plansza zasłonięta): serwer zapisuje `start` = chwila rozpoczęcia + 15 s (`odliczanie` w obiekcie gry) i odrzuca ruchy przed tym czasem. Link `/?wyzwanie` w karcie otwartej w tle zaczyna wyzwanie dopiero, gdy karta stanie się widoczna.
 - Zapis wyniku, identyfikator gracza w `sessionStorage` (`wyzwanie-gracz`), podświetlenie w rankingu — jak w Szyfrancie (README tam). Stan wyzwania: `sessionStorage` `sudoku-wyzwanie`.
 - Sprzątanie bazy robi cron Workera Szyfranta (wspólna baza).
 - Test: `~/.cache/puzzle-test/wyzwanie-sudoku-ui.js` (`URL=… node …`).

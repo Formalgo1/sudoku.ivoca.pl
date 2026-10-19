@@ -64,7 +64,8 @@ async function planszaDnia(env, gra, dzien) {
 function poprawnyDzien(d) { return typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d); }
 function poprawnyGracz(g) { return typeof g === 'string' && /^[0-9A-HJKMNP-TV-Z]{8}$/.test(g); }
 
-// gra: { nazwa, nowaPlansza(), publiczne(dane), poczatkowyStan(), ruch(stan, dane, body) -> {stan, odpowiedz, koniec?}, kolejnosc }
+// gra: { nazwa, nowaPlansza(), publiczne(dane), poczatkowyStan(), ruch(stan, dane, body) -> {stan, odpowiedz, koniec?}, kolejnosc,
+//        odliczanie? (ms przed startem: czas gry liczy się dopiero od końca odliczania) }
 export async function obsluzWyzwanie(request, env, gra) {
   const url = new URL(request.url);
   const sciezka = url.pathname.replace(/^\/api\/wyzwanie\/?/, '');
@@ -94,10 +95,11 @@ async function start(env, gra) {
   const dzien = dzisiaj();
   const dane = await planszaDnia(env, gra, dzien);
   const id = losowyKod(24);
-  const teraz = Date.now();
+  const odliczanie = gra.odliczanie || 0;
+  const startGry = Date.now() + odliczanie;
   await env.DB.prepare('INSERT INTO sesje (id, gra, dzien, start, stan) VALUES (?, ?, ?, ?, ?)')
-    .bind(id, gra.nazwa, dzien, teraz, JSON.stringify(gra.poczatkowyStan())).run();
-  return json({ sesja: id, dzien, start: teraz, plansza: gra.publiczne(dane) });
+    .bind(id, gra.nazwa, dzien, startGry, JSON.stringify(gra.poczatkowyStan())).run();
+  return json({ sesja: id, dzien, start: startGry, odliczanie, plansza: gra.publiczne(dane) });
 }
 
 async function ruch(env, gra, body) {
@@ -107,6 +109,7 @@ async function ruch(env, gra, body) {
   if (s.koniec) return blad(409, 'Ta gra już się skończyła.');
   const teraz = Date.now();
   if (teraz - s.start > CZAS_NA_GRE) return blad(410, 'Czas na tę grę minął — zacznij wyzwanie od nowa.');
+  if (teraz < s.start - 1000) return blad(409, 'Odliczanie jeszcze trwa.');
 
   const dane = await planszaDnia(env, gra, s.dzien);
   const wynik = gra.ruch(JSON.parse(s.stan), dane, body);

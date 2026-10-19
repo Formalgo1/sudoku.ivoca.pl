@@ -6,6 +6,7 @@ import { generuj, sprawdz } from './sudoku-gen.mjs';
 export const SUDOKU = {
   nazwa: 'sudoku',
   kolejnosc: 'czas ASC',
+  odliczanie: 15000,   // 15 s odliczania przed pokazaniem planszy; czas liczy się od końca odliczania
   // Plansze są wygenerowane na zapas (build/plansze-wyzwania.mjs); to tylko awaryjnie, bez kontroli jednoznaczności
   nowaPlansza() { return generuj(losowa, 46, false); },
   publiczne(dane) { return { plansza: dane.plansza }; },
