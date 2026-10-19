@@ -243,7 +243,7 @@ function ivocaStat(event, won) {
                 <ul class="list-disc pl-5 space-y-1">
                     <li><strong>Ołówek:</strong> Włącz tryb ołówka, aby zapisywać małe cyfry w komórkach, które mogą być potencjalnymi rozwiązaniami.</li>
                     <li><strong>Podpowiedź:</strong> Jeśli utkniesz, kliknij żarówkę, aby poznać poprawną cyfrę dla zaznaczonego pola.</li>
-                    <li><strong>Wyzwanie dnia:</strong> codziennie ta sama plansza dla wszystkich. Zaczyna się po 15 sekundach odliczania, potem biegnie czas. Bez podpowiedzi i limitu błędów — na czerwono zaznaczane są tylko cyfry, które powtarzają się w wierszu, kolumnie lub kwadracie. Czas liczy serwer, a po ukończeniu możesz zapisać wynik na publicznej liście.</li>
+                    <li><strong>Wyzwanie dnia:</strong> codziennie ta sama plansza dla wszystkich. Zaczyna się po 15 sekundach odliczania, potem biegnie czas. Bez podpowiedzi. Każdą cyfrę sprawdza serwer: zła cyfra jest zaznaczona na czerwono i liczy się jako błąd, a 3 błędy kończą wyzwanie. Czas liczy serwer, a po ukończeniu możesz zapisać wynik na publicznej liście.</li>
                     <li><strong>Klawiatura:</strong> Możesz grać używając klawiatury komputera – cyfry 1-9 wpisują wartość, Backspace/Delete usuwa, a strzałki pozwalają nawigować.</li>
                 </ul>
             </div>
@@ -355,7 +355,6 @@ function ivocaStat(event, won) {
         function setDailyUI(active) {
             document.getElementById('select-difficulty').classList.toggle('hidden', active);
             document.getElementById('daily-badge').classList.toggle('hidden', !active);
-            document.getElementById('mistakes-box').classList.toggle('hidden', active);
             document.getElementById('btn-pause').classList.toggle('hidden', active);
             const hint = document.getElementById('btn-hint');
             hint.disabled = active;
@@ -367,7 +366,7 @@ function ivocaStat(event, won) {
             const d = (state.daily && state.daily.dzien === dzisPL()) ? state.daily : loadDaily();
             const info = document.getElementById('daily-info'), btn = document.getElementById('btn-daily');
             if (!d) { info.innerText = 'Ta sama plansza dla wszystkich'; btn.innerText = 'Graj'; btn.disabled = false; return; }
-            if (d.koniec) { info.innerText = `Rozegrane dziś · czas ${formatTime(Math.floor(d.czas / 1000))}`; btn.innerText = 'Wynik'; btn.disabled = false; return; }
+            if (d.koniec) { info.innerText = d.wygrana === false ? 'Rozegrane dziś · 3 błędy' : `Rozegrane dziś · czas ${formatTime(Math.floor(d.czas / 1000))} · błędy: ${d.bledy || 0}`; btn.innerText = 'Wynik'; btn.disabled = false; return; }
             const trwa = state.daily === d || (state.daily && state.daily.sesja === d.sesja);
             info.innerText = `${fmtDzien(d.dzien)} · ${trwa ? 'w trakcie' : 'rozpoczęte — dokończ'}`;
             btn.innerText = trwa ? 'Trwa' : 'Dokończ';
@@ -382,7 +381,8 @@ function ivocaStat(event, won) {
             state.boardCurrent = Array.from({ length: 9 }, (_, r) => Array.from({ length: 9 }, (_, c) => +cur[r * 9 + c]));
             state.boardNotes = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
             state.selectedCell = null;
-            state.mistakes = 0;
+            state.mistakes = d.bledy || 0;
+            document.getElementById('mistakes-count').innerText = `${state.mistakes}/${state.maxMistakes}`;
             state.history = [];
             state.redoStack = [];
             state.isGameOver = !!d.koniec;
@@ -426,56 +426,91 @@ function ivocaStat(event, won) {
             }).finally(() => { dailyBusy = false; updateDailyCard(); });
         }
 
-        // cyfra powtarza się w wierszu, kolumnie albo kwadracie 3x3
-        function hasConflict(r, c) {
-            const v = state.boardCurrent[r][c];
-            if (!v) return false;
-            for (let i = 0; i < 9; i++) {
-                if (i !== c && state.boardCurrent[r][i] === v) return true;
-                if (i !== r && state.boardCurrent[i][c] === v) return true;
-                const br = 3 * Math.floor(r / 3) + Math.floor(i / 3), bc = 3 * Math.floor(c / 3) + (i % 3);
-                if ((br !== r || bc !== c) && state.boardCurrent[br][bc] === v) return true;
+        // Każda wpisana cyfra idzie do serwera (po kolei, kolejką), który mówi, czy jest dobra, i liczy błędy.
+        // Werdykty: d.oceny[indeks] = { v, ok }. 3 błędy albo komplet dobrych cyfr kończy wyzwanie (decyduje serwer).
+        let kolejka = Promise.resolve();
+        function checkDigitDaily(row, col, num) {
+            const d = state.daily, i = row * 9 + col;
+            d.oceny = d.oceny || {};
+            const znana = d.oceny[i];
+            if (znana && znana.v === num) {      // ta cyfra w tym polu już oceniona — bez ponownego liczenia błędu
+                if (znana.ok) autoCleanNotes(row, col, num);
+                return;
             }
-            return false;
+            kolejka = kolejka.then(() => {
+                if (state.daily !== d || d.koniec) return;
+                return api('ruch', { sesja: d.sesja, cyfra: { i, v: num } }).then(r => {
+                    d.oceny[i] = { v: num, ok: r.poprawna };
+                    d.bledy = r.bledy;
+                    if (state.daily !== d) {
+                        // gracz przeszedł w międzyczasie do zwykłej gry — dopisz werdykt do zapisanego stanu wyzwania
+                        try {
+                            const z = JSON.parse(localStorage.getItem('sudoku-wyzwanie') || 'null');
+                            if (z && z.sesja === d.sesja) {
+                                z.oceny = d.oceny; z.bledy = d.bledy;
+                                if (r.koniec) { z.koniec = true; z.czas = r.czas; z.wygrana = !!r.wygrana; }
+                                localStorage.setItem('sudoku-wyzwanie', JSON.stringify(z));
+                            }
+                        } catch (x) {}
+                        return;
+                    }
+                    state.mistakes = r.bledy;
+                    document.getElementById('mistakes-count').innerText = `${state.mistakes}/${state.maxMistakes}`;
+                    if (r.poprawna && state.boardCurrent[row][col] === num) autoCleanNotes(row, col, num);
+                    renderBoard();
+                    saveDaily();
+                    if (r.koniec) finishDaily(r);
+                }).catch(e => {
+                    if (state.daily !== d) return;
+                    if (e.status === 409 && d.koniec) return;
+                    alert(e.message);
+                    if (e.status === 404 || e.status === 410) { try { localStorage.removeItem('sudoku-wyzwanie'); } catch (x) {} state.daily = null; startNewGame(); return; }
+                    // cyfra nie została sprawdzona — usuwamy ją, żeby wpisać jeszcze raz
+                    if (state.boardCurrent[row][col] === num) { state.boardCurrent[row][col] = 0; renderBoard(); saveDaily(); }
+                });
+            });
         }
 
-        function submitDaily() {
+        function finishDaily(r) {
             const d = state.daily;
-            if (!d || dailyBusy || d.koniec) return;
-            dailyBusy = true;
-            api('ruch', { sesja: d.sesja, wynik: state.boardCurrent.map(r => r.join('')).join('') }).then(r => {
-                if (!r.poprawne) { alert('Serwer nie przyjął rozwiązania — sprawdź planszę.'); return; }
-                d.koniec = true; d.czas = r.czas;
-                state.isGameOver = true;
-                stopTimer();
-                state.timer = Math.floor(r.czas / 1000);
-                document.getElementById('timer-text').innerText = formatTime(state.timer);
-                saveDaily();
-                ivocaStat('finish', true);
-                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-                showDailyEnd();
-                updateDailyCard();
-            }).catch(e => {
-                alert(e.message);
-                if (e.status === 404 || e.status === 410) { try { localStorage.removeItem('sudoku-wyzwanie'); } catch (x) {} state.daily = null; startNewGame(); }
-            }).finally(() => { dailyBusy = false; });
+            d.koniec = true; d.czas = r.czas; d.wygrana = !!r.wygrana; d.bledy = r.bledy;
+            state.isGameOver = true;
+            stopTimer();
+            state.timer = Math.floor(r.czas / 1000);
+            document.getElementById('timer-text').innerText = formatTime(state.timer);
+            saveDaily();
+            ivocaStat('finish', d.wygrana);
+            if (d.wygrana) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            showDailyEnd();
+            updateDailyCard();
         }
 
         function showDailyEnd() {
             const d = state.daily;
             const modal = document.getElementById('modal-gameover');
             const icon = document.getElementById('gameover-icon');
-            icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400';
-            icon.innerHTML = '<i class="fa-solid fa-calendar-check"></i>';
-            document.getElementById('gameover-title').innerText = 'Wyzwanie dnia ukończone!';
-            document.getElementById('gameover-desc').innerText = `Plansza z ${fmtDzien(d.dzien)} rozwiązana w czasie ${formatTime(Math.floor(d.czas / 1000))}.`;
+            const przegrana = d.wygrana === false;
+            if (przegrana) {
+                icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400';
+                icon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                document.getElementById('gameover-title').innerText = 'Koniec wyzwania';
+                document.getElementById('gameover-desc').innerText = 'Trzy błędy — tym razem się nie udało. Jutro nowa plansza!';
+            } else {
+                icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400';
+                icon.innerHTML = '<i class="fa-solid fa-calendar-check"></i>';
+                document.getElementById('gameover-title').innerText = 'Wyzwanie dnia ukończone!';
+                document.getElementById('gameover-desc').innerText = `Plansza z ${fmtDzien(d.dzien)} rozwiązana w czasie ${formatTime(Math.floor(d.czas / 1000))}, błędy: ${d.bledy || 0}.`;
+            }
             document.getElementById('btn-modal-new-game').innerText = 'Zwykła gra';
             const box = document.getElementById('gameover-daily');
             box.classList.remove('hidden');
             box.innerHTML = '';
             const p = (cls, text) => { const e = document.createElement('p'); e.className = cls; e.innerText = text; box.appendChild(e); return e; };
             const link = () => { const a = document.createElement('a'); a.href = 'ranking?dzien=' + d.dzien; a.className = 'block w-full text-center mt-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 font-semibold py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition'; a.innerText = 'Zobacz ranking'; box.appendChild(a); };
-            if (d.zapisano || sess.get('wyzwanie-zapisano') === d.dzien) {
+            if (przegrana) {
+                p('text-slate-500 dark:text-slate-400', 'Na listę trafiają tylko ukończone plansze.');
+                link();
+            } else if (d.zapisano || sess.get('wyzwanie-zapisano') === d.dzien) {
                 p('font-semibold text-slate-800 dark:text-slate-100', d.zapisano || 'Twój dzisiejszy wynik jest już na liście.');
                 link();
             } else if (d.odrzucono) {
@@ -483,7 +518,7 @@ function ivocaStat(event, won) {
                 link();
             } else {
                 p('font-semibold text-slate-800 dark:text-slate-100 mb-1', 'Czy chcesz zapisać wynik na publicznie dostępnej liście i porównać wyniki z innymi graczami?');
-                p('text-xs text-slate-500 dark:text-slate-400', 'Na liście pojawi się tylko losowy identyfikator nadany przez serwer i czas. Ta karta przeglądarki pamięta identyfikator do jej zamknięcia.');
+                p('text-xs text-slate-500 dark:text-slate-400', 'Na liście pojawi się tylko losowy identyfikator nadany przez serwer, czas i liczba błędów. Ta karta przeglądarki pamięta identyfikator do jej zamknięcia.');
                 const row = document.createElement('div'); row.className = 'grid grid-cols-2 gap-2 mt-3';
                 const no = document.createElement('button'); no.className = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 font-semibold py-2.5 rounded-xl transition'; no.innerText = 'Nie, dziękuję';
                 const yes = document.createElement('button'); yes.className = 'bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl shadow transition disabled:opacity-50'; yes.innerText = 'Opublikuj wynik';
@@ -737,7 +772,8 @@ function ivocaStat(event, won) {
                             valSpan.className = 'cell-val z-10 font-bold text-slate-900 dark:text-slate-100';
                         } else {
                             // Sprawdzanie błędów (w wyzwaniu dnia: tylko powtórzenia — rozwiązania nie znamy)
-                            const isError = state.autoCheck && (state.daily ? hasConflict(r, c) : val !== state.boardSolution[r][c]);
+                            const ocena = state.daily && state.daily.oceny && state.daily.oceny[r * 9 + c];
+                            const isError = state.autoCheck && (state.daily ? !!(ocena && ocena.v === val && !ocena.ok) : val !== state.boardSolution[r][c]);
                             if (isError) {
                                 valSpan.className = 'cell-val z-10 font-bold text-red-500 dark:text-red-400';
                             } else {
@@ -808,7 +844,7 @@ function ivocaStat(event, won) {
                     state.boardCurrent[row][col] = num;
 
                     if (state.daily) {
-                        if (!hasConflict(row, col)) autoCleanNotes(row, col, num);
+                        checkDigitDaily(row, col, num);
                     } else if (num !== state.boardSolution[row][col]) {
                         // Obsługa błędu
                         state.mistakes++;
@@ -880,7 +916,7 @@ function ivocaStat(event, won) {
             const previousState = state.history.pop();
             state.boardCurrent = previousState.boardCurrent;
             state.boardNotes = previousState.boardNotes;
-            state.mistakes = previousState.mistakes;
+            state.mistakes = state.daily ? (state.daily.bledy || 0) : previousState.mistakes;
 
             document.getElementById('mistakes-count').innerText = `${state.mistakes}/${state.maxMistakes}`;
             renderBoard();
@@ -900,21 +936,15 @@ function ivocaStat(event, won) {
             const nextState = state.redoStack.pop();
             state.boardCurrent = nextState.boardCurrent;
             state.boardNotes = nextState.boardNotes;
-            state.mistakes = nextState.mistakes;
+            state.mistakes = state.daily ? (state.daily.bledy || 0) : nextState.mistakes;
 
             document.getElementById('mistakes-count').innerText = `${state.mistakes}/${state.maxMistakes}`;
             renderBoard();
-            if (state.daily) { saveDaily(); checkWinCondition(); }
+            if (state.daily) saveDaily();
         }
 
         function checkWinCondition() {
-            if (state.daily) {
-                for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) {
-                    if (!state.boardCurrent[r][c] || hasConflict(r, c)) return;
-                }
-                submitDaily();
-                return;
-            }
+            if (state.daily) return;   // w wyzwaniu koniec ogłasza serwer
             for (let r = 0; r < 9; r++) {
                 for (let c = 0; c < 9; c++) {
                     if (state.boardCurrent[r][c] !== state.boardSolution[r][c]) {

@@ -118,8 +118,8 @@ async function ruch(env, gra, body) {
   const nowyStan = JSON.stringify(wynik.stan);
   let zmiana;
   if (wynik.koniec) {
-    zmiana = await env.DB.prepare('UPDATE sesje SET stan = ?, koniec = ?, czas = ?, wygrana = ?, proby = ? WHERE id = ? AND stan = ? AND koniec IS NULL')
-      .bind(nowyStan, teraz, teraz - s.start, wynik.koniec.wygrana ? 1 : 0, wynik.koniec.proby ?? null, s.id, s.stan).run();
+    zmiana = await env.DB.prepare('UPDATE sesje SET stan = ?, koniec = ?, czas = ?, wygrana = ?, proby = ?, bledy = ? WHERE id = ? AND stan = ? AND koniec IS NULL')
+      .bind(nowyStan, teraz, teraz - s.start, wynik.koniec.wygrana ? 1 : 0, wynik.koniec.proby ?? null, wynik.koniec.bledy ?? null, s.id, s.stan).run();
   } else {
     zmiana = await env.DB.prepare('UPDATE sesje SET stan = ? WHERE id = ? AND stan = ? AND koniec IS NULL')
       .bind(nowyStan, s.id, s.stan).run();
@@ -133,6 +133,7 @@ async function ruch(env, gra, body) {
     odp.wygrana = !!wynik.koniec.wygrana;
     odp.czas = teraz - s.start;
     if (wynik.koniec.proby != null) odp.proby = wynik.koniec.proby;
+    if (wynik.koniec.bledy != null) odp.bledy = wynik.koniec.bledy;
   }
   return json(odp);
 }
@@ -161,8 +162,8 @@ async function zapisz(env, gra, body) {
     if (!gracz) return blad(500, 'Nie udało się nadać identyfikatora.');
   }
 
-  const r = await env.DB.prepare('INSERT OR IGNORE INTO wyniki (gra, dzien, gracz, proby, czas, zapisano) VALUES (?, ?, ?, ?, ?, ?)')
-    .bind(gra.nazwa, s.dzien, gracz, s.proby, s.czas, teraz).run();
+  const r = await env.DB.prepare('INSERT OR IGNORE INTO wyniki (gra, dzien, gracz, proby, czas, zapisano, bledy) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(gra.nazwa, s.dzien, gracz, s.proby, s.czas, teraz, s.bledy ?? null).run();
   if (!r.meta.changes) return json({ blad: 'Twój wynik z tego dnia jest już na liście.', gracz, token, dzien: s.dzien }, 409);
   await env.DB.prepare('UPDATE sesje SET zapisano = 1 WHERE id = ?').bind(s.id).run();
 
@@ -171,7 +172,7 @@ async function zapisz(env, gra, body) {
 }
 
 async function listaDnia(env, gra, dzien, gracz) {
-  const { results } = await env.DB.prepare(`SELECT gracz, proby, czas FROM wyniki WHERE gra = ? AND dzien = ? ORDER BY ${gra.kolejnosc}, zapisano LIMIT 5000`)
+  const { results } = await env.DB.prepare(`SELECT gracz, proby, czas, bledy FROM wyniki WHERE gra = ? AND dzien = ? ORDER BY ${gra.kolejnosc}, zapisano LIMIT 5000`)
     .bind(gra.nazwa, dzien).all();
   let ty = null, miejsce = 0, poprzedni = null;
   const wiersze = results.map((w, i) => {
@@ -180,6 +181,7 @@ async function listaDnia(env, gra, dzien, gracz) {
     if (klucz !== poprzedni) { miejsce = i + 1; poprzedni = klucz; }
     const wiersz = { miejsce, gracz: w.gracz, czas: w.czas };
     if (w.proby != null) wiersz.proby = w.proby;
+    if (w.bledy != null) wiersz.bledy = w.bledy;
     if (gracz && w.gracz === gracz) { wiersz.ty = true; ty = wiersz; }
     return wiersz;
   });

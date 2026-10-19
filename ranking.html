@@ -47,7 +47,7 @@ footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top
     <a class="btn primary" href="./?wyzwanie">Zagraj w wyzwanie</a>
   </div>
   <h1>Ranking wyzwania dnia</h1>
-  <p class="sub">Ta sama plansza dla wszystkich. Kolejność: krótszy czas rozwiązania.</p>
+  <p class="sub">Ta sama plansza dla wszystkich. Kolejność: krótszy czas rozwiązania. Błędy są podane informacyjnie (3 błędy kończą wyzwanie).</p>
 
   <div class="days">
     <button class="btn" id="prev" aria-label="Poprzedni dzień">‹</button>
@@ -64,7 +64,8 @@ footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top
 <script>
 (function () {
   'use strict';
-  var GRA_PROBY = false;  // Sudoku: liczy się tylko czas
+  var GRA_PROBY = false;  // Sudoku: liczy się czas
+  var GRA_BLEDY = true;   // Sudoku: kolumna z liczbą błędów (informacyjnie)
   var START = '2026-10-19';
   function $(id) { return document.getElementById(id); }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
@@ -99,11 +100,12 @@ footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top
         var t = el('table'), head = el('tr');
         head.appendChild(el('th', 'n', '#')); head.appendChild(el('th', '', 'Gracz'));
         if (GRA_PROBY) head.appendChild(el('th', 'n', 'Próby'));
+        if (GRA_BLEDY) head.appendChild(el('th', 'n', 'Błędy'));
         head.appendChild(el('th', 'n', 'Czas'));
         var thead = el('thead'); thead.appendChild(head); t.appendChild(thead);
         var tb = el('tbody'), poprz = 0;
         d.wiersze.forEach(function (w) {
-          if (w.miejsce > poprz + 1 && poprz >= 100) { var g = el('tr', 'gap'); var c = el('td', '', '…'); c.colSpan = GRA_PROBY ? 4 : 3; g.appendChild(c); tb.appendChild(g); }
+          if (w.miejsce > poprz + 1 && poprz >= 100) { var g = el('tr', 'gap'); var c = el('td', '', '…'); c.colSpan = 3 + (GRA_PROBY ? 1 : 0) + (GRA_BLEDY ? 1 : 0); g.appendChild(c); tb.appendChild(g); }
           poprz = w.miejsce;
           var tr = el('tr', w.ty ? 'ty' : '');
           tr.appendChild(el('td', 'n', String(w.miejsce)));
@@ -111,6 +113,7 @@ footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top
           if (w.ty) who.appendChild(el('span', 'badge', 'To Ty'));
           tr.appendChild(who);
           if (GRA_PROBY) tr.appendChild(el('td', 'n', String(w.proby)));
+          if (GRA_BLEDY) tr.appendChild(el('td', 'n', w.bledy == null ? '–' : String(w.bledy)));
           tr.appendChild(el('td', 'n', fmtCzas(w.czas)));
           if (w.ty) tr.setAttribute('aria-current', 'true');
           tb.appendChild(tr);

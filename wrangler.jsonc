@@ -17,9 +17,9 @@
     { "binding": "DB", "database_name": "wyzwanie-dnia", "database_id": "74e24120-ba92-4ed9-add7-3da4a6d8c693" }
   ],
 
-  // Limit zapytań POST z jednego adresu (liczy Cloudflare, adresów nie zapisujemy)
+  // Limit zapytań POST z jednego adresu (każda cyfra wyzwania to jedno zapytanie) (liczy Cloudflare, adresów nie zapisujemy)
   "ratelimits": [
-    { "name": "LIMIT", "namespace_id": "1902", "simple": { "limit": 60, "period": 60 } }
+    { "name": "LIMIT", "namespace_id": "1902", "simple": { "limit": 150, "period": 60 } }
   ],
 
   "observability": { "enabled": false },
