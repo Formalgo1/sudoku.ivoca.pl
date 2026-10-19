@@ -77,7 +77,7 @@ footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top
   var m = /[?&]dzien=(\d{4}-\d{2}-\d{2})/.exec(location.search);
   var dzien = m ? m[1] : null, dzis = null;
 
-  $('me').textContent = ja && ja.gracz ? 'Twój identyfikator w tej karcie przeglądarki: #' + ja.gracz + ' (Twój wynik jest podświetlony).' : '';
+  $('me').textContent = ja && ja.gracz ? 'Twój identyfikator w tej karcie przeglądarki: #' + ja.gracz + ' (Twój wynik jest podświetlony). Zapamiętaj identyfikator, jeśli chcesz sprawdzić wyniki wyzwania po zamknięciu karty przeglądarki.' : '';
 
   function wczytaj() {
     var list = $('list');
