@@ -51,7 +51,17 @@ async function czytajJson(request) {
   return t ? JSON.parse(t) : {};
 }
 
+// plansza dnia się nie zmienia — trzymamy ją też w pamięci Workera (mniej zapytań do bazy przy każdym ruchu)
+const pamiecPlansz = new Map();
 async function planszaDnia(env, gra, dzien) {
+  const klucz = gra.nazwa + ':' + dzien;
+  if (pamiecPlansz.has(klucz)) return pamiecPlansz.get(klucz);
+  const dane = await planszaZBazy(env, gra, dzien);
+  if (pamiecPlansz.size > 20) pamiecPlansz.clear();
+  pamiecPlansz.set(klucz, dane);
+  return dane;
+}
+async function planszaZBazy(env, gra, dzien) {
   let row = await env.DB.prepare('SELECT dane FROM plansze WHERE gra = ? AND dzien = ?').bind(gra.nazwa, dzien).first();
   if (row) return JSON.parse(row.dane);
   const dane = gra.nowaPlansza();

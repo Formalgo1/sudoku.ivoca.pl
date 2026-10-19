@@ -407,7 +407,13 @@ function ivocaStat(event, won) {
             if (!d.koniec) state.timerInterval = setInterval(tick, 200);
             setDailyUI(true);
             renderBoard();
-            if (d.koniec) showDailyEnd();
+            if (d.koniec) { showDailyEnd(); return; }
+            // cyfry bez werdyktu serwera (np. przerwane odświeżeniem) wysyłamy jeszcze raz
+            for (let i = 0; i < 81; i++) {
+                const v = state.boardCurrent[Math.floor(i / 9)][i % 9];
+                const o = d.oceny && d.oceny[i];
+                if (v && d.plansza[i] === '0' && !(o && o.v === v)) checkDigitDaily(Math.floor(i / 9), i % 9, v);
+            }
         }
 
         function startDaily() {
@@ -438,7 +444,7 @@ function ivocaStat(event, won) {
                 return;
             }
             kolejka = kolejka.then(() => {
-                if (state.daily !== d || d.koniec) return;
+                if (d.koniec) return;   // wysyłamy także wtedy, gdy gracz przeszedł już do zwykłej gry
                 return api('ruch', { sesja: d.sesja, cyfra: { i, v: num } }).then(r => {
                     d.oceny[i] = { v: num, ok: r.poprawna };
                     d.bledy = r.bledy;
