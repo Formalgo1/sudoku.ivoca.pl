@@ -339,14 +339,18 @@ function ivocaStat(event, won) {
         function fmtDzien(d) { const p = d.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; }
         let dailyBusy = false;
 
+        // stan dzisiejszego wyzwania w tej przeglądarce (localStorage, tylko bieżący dzień): po odświeżeniu albo w nowej
+        // karcie można dokończyć, a rozegranego nie da się zacząć od nowa
         function saveDaily() {
             const d = state.daily; if (!d) return;
             d.current = state.boardCurrent.map(r => r.join('')).join('');
-            sess.set('sudoku-wyzwanie', d);
+            try { localStorage.setItem('sudoku-wyzwanie', JSON.stringify(d)); } catch (e) {}
         }
         function loadDaily() {
-            const d = sess.get('sudoku-wyzwanie');
-            return d && d.dzien === dzisPL() ? d : null;
+            let d = null;
+            try { d = JSON.parse(localStorage.getItem('sudoku-wyzwanie') || 'null'); } catch (e) {}
+            if (d && d.dzien !== dzisPL()) { try { localStorage.removeItem('sudoku-wyzwanie'); } catch (e) {} d = null; }
+            return d;
         }
         function setDailyUI(active) {
             document.getElementById('select-difficulty').classList.toggle('hidden', active);
@@ -453,7 +457,7 @@ function ivocaStat(event, won) {
                 updateDailyCard();
             }).catch(e => {
                 alert(e.message);
-                if (e.status === 404 || e.status === 410) { try { sessionStorage.removeItem('sudoku-wyzwanie'); } catch (x) {} state.daily = null; startNewGame(); }
+                if (e.status === 404 || e.status === 410) { try { localStorage.removeItem('sudoku-wyzwanie'); } catch (x) {} state.daily = null; startNewGame(); }
             }).finally(() => { dailyBusy = false; });
         }
 
