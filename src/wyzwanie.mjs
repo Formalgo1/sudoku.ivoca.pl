@@ -1,8 +1,8 @@
-// Wyzwanie dnia — część wspólna dla gier na ivoca.pl (Szyfrant, Sudoku).
-// Ten sam plik jest w obu repozytoriach (src/wyzwanie.mjs); zmiany wprowadzać w obu.
+// Wyzwanie dnia — część wspólna dla gier na ivoca.pl (Szyfrant, Sudoku, Puzzle).
+// Ten sam plik jest we wszystkich trzech repozytoriach (src/wyzwanie.mjs); zmiany wprowadzać we wszystkich.
 //
 // Baza D1 „wyzwanie-dnia” (wspólna dla gier, kolumna `gra`):
-//   plansze  — plansza dnia (dane gry, np. ukryty kod albo sudoku z rozwiązaniem),
+//   plansze  — plansza dnia (dane gry, np. ukryty kod, sudoku z rozwiązaniem albo obrazek puzzli),
 //   sesje    — rozpoczęte gry dnia (stan po stronie serwera; czas liczy serwer), kasowane po 2 dniach,
 //   gracze   — losowy identyfikator nadany przez serwer + skrót tokenu (bez żadnych danych osobowych),
 //   wyniki   — zapisane na publicznej liście wyniki (tylko gdy gracz sam tego chce).
@@ -64,7 +64,7 @@ async function planszaDnia(env, gra, dzien) {
 async function planszaZBazy(env, gra, dzien) {
   let row = await env.DB.prepare('SELECT dane FROM plansze WHERE gra = ? AND dzien = ?').bind(gra.nazwa, dzien).first();
   if (row) return JSON.parse(row.dane);
-  const dane = gra.nowaPlansza();
+  const dane = await gra.nowaPlansza(env, dzien);
   // INSERT OR IGNORE: przy jednoczesnym pierwszym zapytaniu wygrywa jedna plansza, potem czytamy zapisaną
   await env.DB.prepare('INSERT OR IGNORE INTO plansze (gra, dzien, dane) VALUES (?, ?, ?)').bind(gra.nazwa, dzien, JSON.stringify(dane)).run();
   row = await env.DB.prepare('SELECT dane FROM plansze WHERE gra = ? AND dzien = ?').bind(gra.nazwa, dzien).first();
@@ -74,7 +74,8 @@ async function planszaZBazy(env, gra, dzien) {
 function poprawnyDzien(d) { return typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d); }
 function poprawnyGracz(g) { return typeof g === 'string' && /^[0-9A-HJKMNP-TV-Z]{8}$/.test(g); }
 
-// gra: { nazwa, nowaPlansza(), publiczne(dane), poczatkowyStan(), ruch(stan, dane, body) -> {stan, odpowiedz, koniec?}, kolejnosc,
+// gra: { nazwa, nowaPlansza(env, dzien) (może być async), publiczne(dane), poczatkowyStan(),
+//        ruch(stan, dane, body, {teraz, start}) -> {stan, odpowiedz, koniec?}, kolejnosc,
 //        odliczanie? (ms przed startem: czas gry liczy się dopiero od końca odliczania) }
 export async function obsluzWyzwanie(request, env, gra) {
   const url = new URL(request.url);
@@ -122,7 +123,7 @@ async function ruch(env, gra, body) {
   if (teraz < s.start - 1000) return blad(409, 'Odliczanie jeszcze trwa.');
 
   const dane = await planszaDnia(env, gra, s.dzien);
-  const wynik = gra.ruch(JSON.parse(s.stan), dane, body);
+  const wynik = gra.ruch(JSON.parse(s.stan), dane, body, { teraz, start: s.start });
   if (wynik.blad) return blad(400, wynik.blad);
 
   const nowyStan = JSON.stringify(wynik.stan);
