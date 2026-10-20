@@ -1,5 +1,5 @@
-// Wyzwanie dnia — część wspólna dla gier na ivoca.pl (Szyfrant, Sudoku, Puzzle).
-// Ten sam plik jest we wszystkich trzech repozytoriach (src/wyzwanie.mjs); zmiany wprowadzać we wszystkich.
+// Wyzwanie dnia — część wspólna dla gier na ivoca.pl (Szyfrant, Sudoku, Puzzle, Jazda).
+// Ten sam plik jest we wszystkich czterech repozytoriach (src/wyzwanie.mjs); zmiany wprowadzać we wszystkich.
 //
 // Baza D1 „wyzwanie-dnia” (wspólna dla gier, kolumna `gra`):
 //   plansze  — plansza dnia (dane gry, np. ukryty kod, sudoku z rozwiązaniem albo obrazek puzzli),
