@@ -44,7 +44,11 @@ form.contact button:disabled { opacity: .6; cursor: default; }
 .ok { color: var(--accent); margin: 0; font-weight: 600; }
 .back { margin-top: 32px; }
 .site-footer { text-align: center; color: var(--soft); font-size: 13px; padding: 0 16px 32px; }
-  </style>
+      .channel { display: flex; gap: 8px; align-items: baseline; margin: 0; color: var(--soft); }
+    .channel .dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+    .channel.up .dot { background: var(--good, #16a34a); }
+    .channel.down .dot { background: var(--warn, #d97706); }
+</style>
 </head>
 <body>
   <header class="topbar">
@@ -78,6 +82,8 @@ form.contact button:disabled { opacity: .6; cursor: default; }
       <label class="hp" aria-hidden="true">Strona www
         <input name="website" tabindex="-1" autocomplete="off">
       </label>
+      <p class="channel" id="contact-channel" role="status"><span class="dot" aria-hidden="true"></span>
+        <span id="contact-channel-text">Sprawdzamy, czy serwer XMPP jest dostępny…</span></p>
       <div><button type="submit">Wyślij</button></div>
       <p class="error" id="contact-error" role="alert"></p>
       <p class="ok" id="contact-ok" role="status" hidden>Dziękujemy, wiadomość została wysłana.</p>
@@ -85,7 +91,7 @@ form.contact button:disabled { opacity: .6; cursor: default; }
     </form>
 
     <h2 id="regulamin">Regulamin serwisu Sudoku wraz z polityką prywatności</h2>
-    <p class="muted">Obowiązuje od 19.10.2026.</p>
+    <p class="muted">Obowiązuje od 20.10.2026.</p>
     <nav class="toc" aria-label="Spis treści">
       <a href="#regulamin-czesc-1">Część I. Regulamin</a>
       <a href="#prywatnosc">Część II. Polityka prywatności</a>
@@ -175,6 +181,7 @@ form.contact button:disabled { opacity: .6; cursor: default; }
           <tr><td>Dane w pamięci przeglądarki (localStorage): stan dzisiejszego wyzwania dnia — wpisane cyfry, czas i wynik (<code>sudoku-wyzwanie</code>)</td><td>Dokończenie wyzwania po odświeżeniu strony lub w nowej karcie i rozegranie wyzwania tylko raz dziennie w tej przeglądarce. Nie trafiają na serwer poza samą grą</td><td>Do następnego dnia (usuwane przy pierwszym wejściu na stronę kolejnego dnia) albo do wyczyszczenia danych przeglądarki</td></tr>
           <tr><td>Formularz kontaktowy: nick i adres e-mail (oba opcjonalne), treść wiadomości, czas wysłania, adres strony, z której wysłano wiadomość, oraz skrót (hash) adresu IP</td><td>Odpowiedź na pytania i reklamacje oraz limit 3 wiadomości na dobę z jednego adresu, art. 6 ust. 1 lit. f RODO</td><td>Wiadomość przechodzi przez bramkę powiadomień Usługodawcy (powiadom.ivoca.pl, serwer Usługodawcy w Polsce), która przechowuje ją tylko do przekazania dalej: zwykle kilka sekund, gdy komunikator jest niedostępny — do 24 godzin, a wiadomość, której nie udało się przekazać — najwyżej 7 dni. Trafia jako wiadomość na komunikator XMPP Usługodawcy (xmpp.ivoca.pl, ten sam serwer), którego archiwum usuwa ją po 7 dniach, a gdy to niemożliwe — e-mailem do skrzynki Usługodawcy u SEOHOST Sp. z o.o. Kopie w aplikacji komunikatora i w skrzynce e-mail Usługodawca usuwa po załatwieniu sprawy, najpóźniej po 90 dniach. Skrót adresu IP jest trzymany tylko w pamięci bramki przez dobę</td></tr>
           <tr><td>Statystyki gry: informacja, że gra została rozpoczęta albo ukończona (i czy wygrana), oraz skrót (hash) adresu IP</td><td>Wiedza o tym, jak często gra jest używana, oraz ochrona przed nadużyciami (limit zdarzeń na dobę z jednego adresu), art. 6 ust. 1 lit. f RODO</td><td>Bramka powiadomień Usługodawcy (powiadom.ivoca.pl, serwer Usługodawcy w Polsce) dolicza zdarzenie do dziennych liczników gry — bez adresu IP, cookies i identyfikatora gracza — i przechowuje liczniki najwyżej 400 dni. Raz dziennie Usługodawca dostaje ich podsumowanie na komunikator XMPP. Skrót adresu IP jest trzymany tylko w pamięci bramki przez dobę</td></tr>
+          <tr><td>Sprawdzenie, czy komunikator XMPP działa (gdy formularz kontaktowy pojawi się na ekranie)</td><td>Pokazanie, czy wiadomość z formularza pójdzie przez komunikator XMPP, czy e-mailem. Przeglądarka pyta o to bramkę powiadom.ivoca.pl; zapytanie nie zawiera danych z formularza, art. 6 ust. 1 lit. f RODO</td><td>Bramka nie zapisuje tego zapytania</td></tr>
           <tr><td>Adres e-mail i treść korespondencji wysłanej bezpośrednio e-mailem</td><td>Odpowiedź na pytania i reklamacje, art. 6 ust. 1 lit. f RODO</td><td>Do załatwienia sprawy, potem najdłużej 90 dni</td></tr>
         </tbody>
       </table>
@@ -230,6 +237,47 @@ form.contact button:disabled { opacity: .6; cursor: default; }
       var err = document.getElementById('contact-error');
       var ok = document.getElementById('contact-ok');
       var FALLBACK = 'Nie udało się wysłać wiadomości. Spróbuj później albo napisz na global@ivoca.pl.';
+      var API = 'https://powiadom.ivoca.pl/v1/contact';
+      var chan = document.getElementById('contact-channel');
+      var chanText = document.getElementById('contact-channel-text');
+      var CHANNEL = {
+        xmpp: ['up', 'Serwer XMPP działa — wiadomość wyślemy przez sieć XMPP.'],
+        mail: ['down', 'Serwer XMPP jest teraz niedostępny — wiadomość wyślemy e-mailem.'],
+        later: ['down', 'Serwer XMPP jest teraz niedostępny — wiadomość wyślemy, gdy znów zacznie działać.'],
+        unknown: ['', 'Nie udało się sprawdzić serwera XMPP. Jeśli wysyłanie się nie uda, napisz na global@ivoca.pl.']
+      };
+      var SENT = {
+        xmpp: 'Dziękujemy, wiadomość została wysłana przez sieć XMPP.',
+        mail: 'Dziękujemy, wiadomość zostanie wysłana e-mailem.',
+        later: 'Dziękujemy, wiadomość zostanie wysłana, gdy serwer XMPP znów zacznie działać.'
+      };
+      var checkedAt = 0;
+      function showChannel(via) {
+        var c = CHANNEL[via] || CHANNEL.unknown;
+        chan.className = 'channel' + (c[0] ? ' ' + c[0] : '');
+        chanText.textContent = c[1];
+      }
+      async function checkChannel() {
+        if (Date.now() - checkedAt < 60000) return;
+        checkedAt = Date.now();
+        try {
+          var res = await fetch(API + '/status', { cache: 'no-store' });
+          var data = await res.json();
+          showChannel(res.ok && data.ok ? data.via : 'unknown');
+        } catch (_) {
+          showChannel('unknown');
+        }
+      }
+      // Sprawdzamy dopiero, gdy formularz jest na ekranie, i odświeżamy przy pisaniu (najwyżej raz na minutę)
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          if (entries.some(function (e) { return e.isIntersecting; })) { io.disconnect(); checkChannel(); }
+        });
+        io.observe(form);
+      } else {
+        checkChannel();
+      }
+      form.addEventListener('focusin', checkChannel);
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         var btn = form.querySelector('button');
@@ -237,7 +285,7 @@ form.contact button:disabled { opacity: .6; cursor: default; }
         ok.hidden = true;
         btn.disabled = true;
         try {
-          var res = await fetch('https://powiadom.ivoca.pl/v1/contact', {
+          var res = await fetch(API, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -249,7 +297,9 @@ form.contact button:disabled { opacity: .6; cursor: default; }
           try { data = await res.json(); } catch (_) {}
           if (!res.ok || !data.ok) throw new Error(data.error || FALLBACK);
           form.reset();
+          ok.textContent = SENT[data.via] || 'Dziękujemy, wiadomość została wysłana.';
           ok.hidden = false;
+          if (data.via) { showChannel(data.via); checkedAt = Date.now(); }
         } catch (x) {
           err.textContent = x instanceof TypeError ? FALLBACK : x.message;
         } finally {
