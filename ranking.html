@@ -61,7 +61,7 @@ footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top
 
   <div class="card" id="list"><p class="empty">Wczytuję…</p></div>
   <p class="note" id="me"></p>
-  <p class="note">Na liście są tylko losowe identyfikatory nadane przez serwer — bez imion, adresów e-mail i innych danych. Wynik trafia tu wyłącznie wtedy, gdy gracz sam go zapisze.</p>
+  <p class="note">Na liście są tylko losowe identyfikatory (przy „Zapamiętaj mnie” inne każdego dnia) — bez imion, adresów e-mail i innych danych. Wynik trafia tu wyłącznie wtedy, gdy gracz sam go zapisze.</p>
 
   <p class="note">Inne wyzwania dnia: <a href="https://szyfrant.ivoca.pl/ranking">Szyfrant</a> · <a href="https://puzzle.ivoca.pl/ranking">Puzzle</a></p>
 
@@ -94,8 +94,11 @@ footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top
     var list = $('list');
     list.innerHTML = '<p class="empty">Wczytuję…</p>';
     var dz = dzien || dzisPL();
-    (window.ivocaPamiec ? ivocaPamiec.gracz(dz) : Promise.resolve(null))
+    // tożsamość z ivoca.pl czekamy najwyżej 2,5 s; gdy dotrze później, lista wczyta się jeszcze raz z podświetleniem
+    var pmP = window.ivocaPamiec ? ivocaPamiec.gracz(dz) : Promise.resolve(null);
+    Promise.race([pmP, new Promise(function (r) { setTimeout(function () { r(undefined); }, 2500); })])
       .then(function (pm) {
+        if (pm === undefined) { pm = null; pmP.then(function (p) { if (p && (dzien || dzisPL()) === dz) wczytaj(); }); }
         var g = pm || ja, h = {};
         opisz(pm, g);
         if (g && g.gracz) h['X-Gracz'] = g.gracz;
