@@ -4,7 +4,8 @@
 // Baza D1 „wyzwanie-dnia” (wspólna dla gier, kolumna `gra`):
 //   plansze  — plansza dnia (dane gry, np. ukryty kod, sudoku z rozwiązaniem albo obrazek puzzli),
 //   sesje    — rozpoczęte gry dnia (stan po stronie serwera; czas liczy serwer), kasowane po 2 dniach,
-//   gracze   — losowy identyfikator nadany przez serwer + skrót tokenu (bez żadnych danych osobowych),
+//   gracze   — losowy identyfikator nadany przez serwer + skrót tokenu (bez żadnych danych osobowych);
+//              przy „Zapamiętaj mnie” identyfikator i token wylicza przeglądarka (inne dla każdej gry i dnia),
 //   wyniki   — zapisane na publicznej liście wyniki (tylko gdy gracz sam tego chce).
 // Adresy IP nie są zapisywane; limit zapytań (binding LIMIT) liczy Cloudflare w pamięci.
 
@@ -73,6 +74,7 @@ async function planszaZBazy(env, gra, dzien) {
 
 function poprawnyDzien(d) { return typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d); }
 function poprawnyGracz(g) { return typeof g === 'string' && /^[0-9A-HJKMNP-TV-Z]{8}$/.test(g); }
+function poprawnyToken(t) { return typeof t === 'string' && /^[0-9A-HJKMNP-TV-Z]{32}$/.test(t); }
 
 // gra: { nazwa, nowaPlansza(env, dzien) (może być async), publiczne(dane), poczatkowyStan(),
 //        ruch(stan, dane, body, {teraz, start}) -> {stan, odpowiedz, koniec?}, kolejnosc,
@@ -161,6 +163,13 @@ async function zapisz(env, gra, body) {
   if (poprawnyGracz(body.gracz) && typeof body.token === 'string') {
     const g = await env.DB.prepare('SELECT token_hash FROM gracze WHERE id = ?').bind(body.gracz).first();
     if (g && g.token_hash === await skrot(body.token)) { gracz = body.gracz; token = body.token; }
+    else if (!g && poprawnyToken(body.token)) {
+      // „Zapamiętaj mnie” (ivoca.pl): identyfikator i token wylicza przeglądarka — osobno dla gry i dnia.
+      // Nieznany identyfikator rejestrujemy z podanym tokenem; zajęty przez kogoś innego → losowy jak dawniej.
+      const r = await env.DB.prepare('INSERT OR IGNORE INTO gracze (id, token_hash, utworzono) VALUES (?, ?, ?)')
+        .bind(body.gracz, await skrot(body.token), teraz).run();
+      if (r.meta.changes) { gracz = body.gracz; token = body.token; }
+    }
   }
   if (!gracz) {
     token = losowyKod(32);

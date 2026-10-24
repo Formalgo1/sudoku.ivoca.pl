@@ -66,6 +66,7 @@ function ivocaStat(event, won) {
   } catch (e) {}
 }
 </script>
+<script src="/pamiec-klient.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">
 
@@ -425,6 +426,7 @@ function ivocaStat(event, won) {
             if (zapis) { applyDaily(zapis); return; }
             dailyBusy = true;
             document.getElementById('btn-daily').disabled = true;
+            if (window.ivocaPamiec) ivocaPamiec.przedluz();   // „Zapamiętaj mnie”: każda gra przedłuża o 30 dni
             api('start').then(d => {
                 ivocaStat('start');
                 applyDaily({ sesja: d.sesja, dzien: d.dzien, plansza: d.plansza.plansza, localStart: Date.now() + (d.odliczanie || 0) });
@@ -534,8 +536,10 @@ function ivocaStat(event, won) {
                 no.addEventListener('click', () => { d.odrzucono = true; saveDaily(); showDailyEnd(); });
                 yes.addEventListener('click', () => {
                     yes.disabled = no.disabled = true;
-                    const ja = sess.get('wyzwanie-gracz') || {};
-                    api('zapisz', { sesja: d.sesja, gracz: ja.gracz, token: ja.token }).then(r => {
+                    (window.ivocaPamiec ? ivocaPamiec.gracz(d.dzien, true) : Promise.resolve(null)).then(function (pm) {
+                      var ja = pm || sess.get('wyzwanie-gracz') || {};   // „Zapamiętaj mnie” (ivoca.pl) albo ta karta
+                      return api('zapisz', { sesja: d.sesja, gracz: ja.gracz, token: ja.token });
+                    }).then(r => {
                         sess.set('wyzwanie-gracz', { gracz: r.gracz, token: r.token });
                         sess.set('wyzwanie-zapisano', r.dzien);
                         d.zapisano = `Zapisano jako #${r.gracz} · miejsce ${r.miejsce} z ${r.liczba}.`;

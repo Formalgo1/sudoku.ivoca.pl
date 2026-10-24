@@ -42,6 +42,7 @@ tr.gap td { text-align: center; color: var(--ink-soft); padding: 4px; }
 .note { color: var(--ink-soft); font-size: 13px; margin-top: 14px; }
 footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top: 24px; }
 </style>
+<script src="/pamiec-klient.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -82,14 +83,24 @@ footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top
   var m = /[?&]dzien=(\d{4}-\d{2}-\d{2})/.exec(location.search);
   var dzien = m ? m[1] : null, dzis = null;
 
-  $('me').textContent = ja && ja.gracz ? 'Twój identyfikator w tej karcie przeglądarki: #' + ja.gracz + ' (Twój wynik jest podświetlony). Zapamiętaj identyfikator, jeśli chcesz sprawdzić wyniki wyzwania po zamknięciu karty przeglądarki.' : '';
+  function opisz(pm, g) {
+    $('me').textContent = pm
+      ? 'Ta przeglądarka pamięta Cię w wyzwaniach dnia (ivoca.pl → „Zapamiętaj mnie”). Twój identyfikator z tego dnia: #' + pm.gracz + ' — inny w każdej grze i każdego dnia. Twój wynik jest podświetlony.'
+      : g && g.gracz ? 'Twój identyfikator w tej karcie przeglądarki: #' + g.gracz + ' (Twój wynik jest podświetlony). Zapamiętaj identyfikator, jeśli chcesz sprawdzić wyniki wyzwania po zamknięciu karty przeglądarki.' : '';
+  }
+  function dzisPL() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
 
   function wczytaj() {
     var list = $('list');
     list.innerHTML = '<p class="empty">Wczytuję…</p>';
-    var h = {};
-    if (ja && ja.gracz) h['X-Gracz'] = ja.gracz;
-    fetch('/api/wyzwanie/ranking' + (dzien ? '?dzien=' + dzien : ''), { headers: h, cache: 'no-store' })
+    var dz = dzien || dzisPL();
+    (window.ivocaPamiec ? ivocaPamiec.gracz(dz) : Promise.resolve(null))
+      .then(function (pm) {
+        var g = pm || ja, h = {};
+        opisz(pm, g);
+        if (g && g.gracz) h['X-Gracz'] = g.gracz;
+        return fetch('/api/wyzwanie/ranking' + (dzien ? '?dzien=' + dzien : ''), { headers: h, cache: 'no-store' });
+      })
       .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
       .then(function (d) {
         dzien = d.dzien; dzis = d.dzis;
