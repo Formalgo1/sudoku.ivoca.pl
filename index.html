@@ -40,6 +40,11 @@
             width: 100%;
         }
 
+        /* Klawisze cyfr: ile jeszcze brakuje danej cyfry; komplet = puste miejsce */
+        .btn-numpad { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+        .btn-numpad .cnt { font-size: 0.7rem; font-weight: 600; opacity: 0.65; }
+        .btn-numpad.gotowa { visibility: hidden; }
+
         /* Custom Scrollbar dla statystyk i instrukcji */
         ::-webkit-scrollbar {
             width: 6px;
@@ -154,7 +159,7 @@ function ivocaStat(event, won) {
                 <!-- Odliczanie przed wyzwaniem dnia (plansza ukryta, czas jeszcze nie biegnie) -->
                 <div id="countdown-overlay" class="absolute inset-0 bg-white dark:bg-slate-900 flex flex-col items-center justify-center gap-2 hidden z-30 rounded-2xl" role="timer" aria-live="assertive">
                     <p class="text-slate-600 dark:text-slate-300 font-semibold">Wyzwanie dnia zaczyna się za</p>
-                    <span id="countdown-num" class="text-8xl font-extrabold text-red-600 dark:text-red-500 tabular-nums leading-none">15</span>
+                    <span id="countdown-num" class="text-8xl font-extrabold text-red-600 dark:text-red-500 tabular-nums leading-none">5</span>
                     <p class="text-xs text-slate-500 dark:text-slate-400">Czas zacznie biec po odliczaniu</p>
                 </div>
 
@@ -196,15 +201,15 @@ function ivocaStat(event, won) {
             <!-- Ekranowa Klawiatura Numeryczna (1-9) -->
             <div class="grid grid-cols-9 gap-1.5 w-full">
                 <!-- Generowane pętlą w JS lub statycznie dla lepszej kontroli -->
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="1">1</button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="2">2</button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="3">3</button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="4">4</button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="5">5</button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="6">6</button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="7">7</button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="8">8</button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="9">9</button>
+                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="1" aria-label="1"><span>1</span><span class="cnt" aria-hidden="true">9</span></button>
+                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="2" aria-label="2"><span>2</span><span class="cnt" aria-hidden="true">9</span></button>
+                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="3" aria-label="3"><span>3</span><span class="cnt" aria-hidden="true">9</span></button>
+                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="4" aria-label="4"><span>4</span><span class="cnt" aria-hidden="true">9</span></button>
+                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="5" aria-label="5"><span>5</span><span class="cnt" aria-hidden="true">9</span></button>
+                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="6" aria-label="6"><span>6</span><span class="cnt" aria-hidden="true">9</span></button>
+                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="7" aria-label="7"><span>7</span><span class="cnt" aria-hidden="true">9</span></button>
+                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="8" aria-label="8"><span>8</span><span class="cnt" aria-hidden="true">9</span></button>
+                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="9" aria-label="9"><span>9</span><span class="cnt" aria-hidden="true">9</span></button>
             </div>
 
             <!-- Opcjonalne ustawienia szybkie -->
@@ -247,7 +252,7 @@ function ivocaStat(event, won) {
                 <ul class="list-disc pl-5 space-y-1">
                     <li><strong>Ołówek:</strong> Włącz tryb ołówka, aby zapisywać małe cyfry w komórkach, które mogą być potencjalnymi rozwiązaniami.</li>
                     <li><strong>Podpowiedź:</strong> Jeśli utkniesz, kliknij żarówkę, aby poznać poprawną cyfrę dla zaznaczonego pola.</li>
-                    <li><strong>Wyzwanie dnia:</strong> codziennie ta sama plansza dla wszystkich. Zaczyna się po 15 sekundach odliczania, potem biegnie czas. Bez podpowiedzi. Każdą cyfrę sprawdza serwer: zła cyfra jest zaznaczona na czerwono i liczy się jako błąd, a 3 błędy kończą wyzwanie. Czas liczy serwer, a po ukończeniu możesz zapisać wynik na publicznej liście.</li>
+                    <li><strong>Wyzwanie dnia:</strong> codziennie ta sama plansza dla wszystkich. Zaczyna się po 5 sekundach odliczania, potem biegnie czas. Bez podpowiedzi. Każdą cyfrę sprawdza serwer: zła cyfra jest zaznaczona na czerwono i liczy się jako błąd, a 3 błędy kończą wyzwanie. Czas liczy serwer, a po ukończeniu możesz zapisać wynik na publicznej liście.</li>
                     <li><strong>Klawiatura:</strong> Możesz grać używając klawiatury komputera – cyfry 1-9 wpisują wartość, Backspace/Delete usuwa, a strzałki pozwalają nawigować.</li>
                 </ul>
             </div>
@@ -468,6 +473,7 @@ function ivocaStat(event, won) {
                     state.mistakes = r.bledy;
                     document.getElementById('mistakes-count').innerText = `${state.mistakes}/${state.maxMistakes}`;
                     if (r.poprawna && state.boardCurrent[row][col] === num) autoCleanNotes(row, col, num);
+                    if (r.poprawna && !r.koniec) autoFillLast();
                     renderBoard();
                     saveDaily();
                     if (r.koniec) finishDaily(r);
@@ -811,6 +817,61 @@ function ivocaStat(event, won) {
                     }
                 }
             }
+            updateNumpad();
+        }
+
+        // Pewne cyfry na planszy: startowe i dobre (zwykła gra — zgodne z rozwiązaniem, wyzwanie — potwierdzone przez serwer)
+        function isConfirmed(r, c) {
+            const v = state.boardCurrent[r][c];
+            if (!v) return false;
+            if (state.boardInitial[r][c] !== 0) return true;
+            if (state.daily) { const o = state.daily.oceny && state.daily.oceny[r * 9 + c]; return !!(o && o.v === v && o.ok); }
+            return !!state.boardSolution && v === state.boardSolution[r][c];
+        }
+
+        function confirmedCounts() {
+            const n = Array(10).fill(0);
+            for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (isConfirmed(r, c)) n[state.boardCurrent[r][c]]++;
+            return n;
+        }
+
+        // Na klawiszu: ile jeszcze brakuje danej cyfry; gdy komplet — klawisz znika, miejsce zostaje
+        function updateNumpad() {
+            const n = confirmedCounts();
+            document.querySelectorAll('.btn-numpad').forEach(btn => {
+                const v = +btn.dataset.val, zostalo = Math.max(0, 9 - n[v]);
+                btn.querySelector('.cnt').textContent = zostalo;
+                btn.classList.toggle('gotowa', zostalo === 0);
+                btn.setAttribute('aria-label', zostalo ? `${v}, zostało ${zostalo}` : `${v}, komplet`);
+                btn.tabIndex = zostalo ? 0 : -1;
+            });
+        }
+
+        // Gdy danej cyfry jest już 8 pewnych, dziewiąte pole jest jednoznaczne — wpisujemy je same
+        function autoFillLast() {
+            if (state.isGameOver || state.countdown) return;
+            const n = confirmedCounts();
+            for (let v = 1; v <= 9; v++) {
+                if (n[v] !== 8) continue;
+                const wiersze = [], kolumny = [];
+                for (let i = 0; i < 9; i++) {
+                    let wr = false, wk = false;
+                    for (let j = 0; j < 9; j++) {
+                        if (state.boardCurrent[i][j] === v && isConfirmed(i, j)) wr = true;
+                        if (state.boardCurrent[j][i] === v && isConfirmed(j, i)) wk = true;
+                    }
+                    if (!wr) wiersze.push(i);
+                    if (!wk) kolumny.push(i);
+                }
+                if (wiersze.length !== 1 || kolumny.length !== 1) continue;
+                const r = wiersze[0], c = kolumny[0];
+                if (state.boardInitial[r][c] !== 0 || state.boardCurrent[r][c] !== 0) continue;
+                if (!state.daily && state.boardSolution[r][c] !== v) continue;
+                state.boardCurrent[r][c] = v;
+                state.boardNotes[r][c].clear();
+                if (state.daily) checkDigitDaily(r, c, v);
+                else autoCleanNotes(r, c, v);
+            }
         }
 
         function selectCell(r, c) {
@@ -870,6 +931,7 @@ function ivocaStat(event, won) {
                     } else {
                         // Jeśli wpisano poprawnie, usuń tę cyfrę z notatek w tym samym wierszu, kolumnie i bloku
                         autoCleanNotes(row, col, num);
+                        autoFillLast();
                     }
                 }
             }
@@ -900,6 +962,7 @@ function ivocaStat(event, won) {
             state.boardCurrent[row][col] = state.boardSolution[row][col];
             state.boardNotes[row][col].clear();
             autoCleanNotes(row, col, state.boardSolution[row][col]);
+            autoFillLast();
 
             renderBoard();
             checkWinCondition();
