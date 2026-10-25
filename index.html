@@ -40,10 +40,11 @@
             width: 100%;
         }
 
-        /* Klawisze cyfr: ile jeszcze brakuje danej cyfry; komplet = puste miejsce */
+        /* Klawisze cyfr: ile jeszcze brakuje danej cyfry; komplet = klawisz wyszarzony i nieaktywny */
         .btn-numpad { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
         .btn-numpad .cnt { font-size: 0.7rem; font-weight: 600; opacity: 0.65; }
-        .btn-numpad.gotowa { visibility: hidden; }
+        .btn-numpad:disabled { opacity: 0.35; cursor: default; pointer-events: none; box-shadow: none; }
+        .btn-numpad:disabled .cnt { visibility: hidden; }
 
         /* Custom Scrollbar dla statystyk i instrukcji */
         ::-webkit-scrollbar {
@@ -835,15 +836,14 @@ function ivocaStat(event, won) {
             return n;
         }
 
-        // Na klawiszu: ile jeszcze brakuje danej cyfry; gdy komplet — klawisz znika, miejsce zostaje
+        // Na klawiszu: ile jeszcze brakuje danej cyfry; gdy komplet — klawisz wyszarzony i nieaktywny
         function updateNumpad() {
             const n = confirmedCounts();
             document.querySelectorAll('.btn-numpad').forEach(btn => {
                 const v = +btn.dataset.val, zostalo = Math.max(0, 9 - n[v]);
                 btn.querySelector('.cnt').textContent = zostalo;
-                btn.classList.toggle('gotowa', zostalo === 0);
+                btn.disabled = zostalo === 0;
                 btn.setAttribute('aria-label', zostalo ? `${v}, zostało ${zostalo}` : `${v}, komplet`);
-                btn.tabIndex = zostalo ? 0 : -1;
             });
         }
 
