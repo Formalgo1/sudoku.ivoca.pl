@@ -402,7 +402,9 @@ function ivocaStat(event, won) {
             const tick = () => {
                 if (state.daily !== d) return;
                 const zostalo = d.localStart - Date.now();
+                const bylo = state.countdown;
                 state.countdown = !d.koniec && zostalo > 0;
+                if (bylo && !state.countdown) { autoFillLast(); renderBoard(); saveDaily(); }   // koniec odliczania
                 overlay.classList.toggle('hidden', !state.countdown);
                 if (state.countdown) {
                     // odliczanie na czerwono; czas gry liczy serwer dopiero od jego końca
@@ -424,6 +426,10 @@ function ivocaStat(event, won) {
                 const o = d.oceny && d.oceny[i];
                 if (v && d.plansza[i] === '0' && !(o && o.v === v)) checkDigitDaily(Math.floor(i / 9), i % 9, v);
             }
+            // gra wczytana z zapisu: cyfry, których jest już 8 pewnych, dopełniamy od razu (nie dopiero przy kolejnym ruchu)
+            autoFillLast();
+            renderBoard();
+            saveDaily();
         }
 
         function startDaily() {
@@ -729,6 +735,7 @@ function ivocaStat(event, won) {
             
             resetTimer();
             startTimer();
+            autoFillLast();   // cyfra z 8 polami startowymi — dziewiąte pole od razu
             renderBoard();
         }
 
