@@ -854,30 +854,44 @@ function ivocaStat(event, won) {
             });
         }
 
-        // Gdy danej cyfry jest już 8 pewnych, dziewiąte pole jest jednoznaczne — wpisujemy je same
+        // Wiersze, kolumny i kwadraty 3×3 jako listy pól [r, c]
+        const UNITS = (() => {
+            const u = [];
+            for (let i = 0; i < 9; i++) {
+                const w = [], k = [], b = [];
+                for (let j = 0; j < 9; j++) {
+                    w.push([i, j]); k.push([j, i]);
+                    b.push([3 * Math.floor(i / 3) + Math.floor(j / 3), 3 * (i % 3) + (j % 3)]);
+                }
+                u.push(w, k, b);
+            }
+            return u;
+        })();
+
+        // Gdy w wierszu, kolumnie albo kwadracie 3×3 jest 8 pewnych cyfr, a dziewiąte pole jest puste,
+        // brakująca cyfra jest jednoznaczna — wpisujemy ją sami (także łańcuchowo)
         function autoFillLast() {
             if (state.isGameOver || state.countdown) return;
-            const n = confirmedCounts();
-            for (let v = 1; v <= 9; v++) {
-                if (n[v] !== 8) continue;
-                const wiersze = [], kolumny = [];
-                for (let i = 0; i < 9; i++) {
-                    let wr = false, wk = false;
-                    for (let j = 0; j < 9; j++) {
-                        if (state.boardCurrent[i][j] === v && isConfirmed(i, j)) wr = true;
-                        if (state.boardCurrent[j][i] === v && isConfirmed(j, i)) wk = true;
+            let zmiana = true;
+            while (zmiana) {
+                zmiana = false;
+                for (const unit of UNITS) {
+                    let puste = null, pewne = 0;
+                    const sa = new Set();
+                    for (const [r, c] of unit) {
+                        if (isConfirmed(r, c)) { pewne++; sa.add(state.boardCurrent[r][c]); }
+                        else if (state.boardCurrent[r][c] === 0) puste = [r, c];
                     }
-                    if (!wr) wiersze.push(i);
-                    if (!wk) kolumny.push(i);
+                    if (pewne !== 8 || !puste || sa.size !== 8) continue;
+                    const [r, c] = puste;
+                    let v = 1; while (sa.has(v)) v++;
+                    if (state.boardInitial[r][c] !== 0) continue;
+                    if (!state.daily && state.boardSolution[r][c] !== v) continue;
+                    state.boardCurrent[r][c] = v;
+                    state.boardNotes[r][c].clear();
+                    if (state.daily) checkDigitDaily(r, c, v);
+                    else { autoCleanNotes(r, c, v); zmiana = true; }
                 }
-                if (wiersze.length !== 1 || kolumny.length !== 1) continue;
-                const r = wiersze[0], c = kolumny[0];
-                if (state.boardInitial[r][c] !== 0 || state.boardCurrent[r][c] !== 0) continue;
-                if (!state.daily && state.boardSolution[r][c] !== v) continue;
-                state.boardCurrent[r][c] = v;
-                state.boardNotes[r][c].clear();
-                if (state.daily) checkDigitDaily(r, c, v);
-                else autoCleanNotes(r, c, v);
             }
         }
 
