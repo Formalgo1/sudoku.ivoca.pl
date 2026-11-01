@@ -11,7 +11,8 @@
 (function () {
   'use strict';
   if (window.ivocaProfilQ && window.ivocaProfilQ.gotowy) return;
-  var MOST = window.IVOCA_PAMIEC_URL || 'https://ivoca.org/pamiec.html';
+  // ?v= omija kopię mostu z pamięci przeglądarki (pamiec.html ma max-age=86400) — podbić przy zmianie obsługi profilu w moście
+  var MOST = window.IVOCA_PAMIEC_URL || 'https://ivoca.org/pamiec.html?v=2';
   var KOLEJKA = 'ivoca-profil-kolejka', MAKS = 50, WIEK = 30 * 24 * 3600 * 1000;
   var ramka = null, gotowa = null, gotowaOk = null, sluchacz = false, nr = 0, czekaja = {}, zegar = null, wysyla = false;
   var origin;
