@@ -64,7 +64,9 @@
     <link rel="stylesheet" href="vendor/tailwind.css">
 <script>
 // Anonimowe statystyki gry (powiadom.ivoca.pl/v1/stats): tylko „rozpoczęta” / „ukończona”, bez danych o graczu.
-function ivocaStat(event, won) {
+function ivocaStat(event, won, dane) {
+  // profil gracza na ivoca.org (ivoca-profil.js): zdarzenie z wariantem i wynikiem, zapisywane tylko w przeglądarce
+  try { (window.ivocaProfilQ = window.ivocaProfilQ || []).push([event, won, dane]); } catch (e) {}
   try {
     var body = { event: event };
     if (typeof won === 'boolean') body.won = won;
@@ -72,6 +74,7 @@ function ivocaStat(event, won) {
   } catch (e) {}
 }
 </script>
+<script src="/ivoca-profil.js" defer></script>
 <script src="/pamiec-klient.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">
@@ -440,7 +443,7 @@ function ivocaStat(event, won) {
             document.getElementById('btn-daily').disabled = true;
             if (window.ivocaPamiec) ivocaPamiec.przedluz();   // „Zapamiętaj mnie”: każda gra przedłuża o 30 dni
             api('start').then(d => {
-                ivocaStat('start');
+                ivocaStat('start', undefined, { war: 'Wyzwanie dnia' });
                 applyDaily({ sesja: d.sesja, dzien: d.dzien, plansza: d.plansza.plansza, localStart: Date.now() + (d.odliczanie || 0) });
                 saveDaily();
             }).catch(e => {
@@ -503,7 +506,7 @@ function ivocaStat(event, won) {
             state.timer = Math.floor(r.czas / 1000);
             document.getElementById('timer-text').innerText = formatTime(state.timer);
             saveDaily();
-            ivocaStat('finish', d.wygrana);
+            ivocaStat('finish', d.wygrana, { war: 'Wyzwanie dnia', czas: Math.round(d.czas / 1000) });
             if (d.wygrana) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             showDailyEnd();
             updateDailyCard();
@@ -717,8 +720,8 @@ function ivocaStat(event, won) {
             setDailyUI(false);
             document.getElementById('gameover-daily').classList.add('hidden');
             document.getElementById('btn-modal-new-game').innerText = 'Zagraj ponownie';
-            ivocaStat('start');
             state.difficulty = document.getElementById('select-difficulty').value;
+            ivocaStat('start', undefined, { war: getDifficultyName(state.difficulty) });
             const { puzzle, solution } = generateSudoku(state.difficulty);
 
             state.boardSolution = solution;
@@ -1054,7 +1057,7 @@ function ivocaStat(event, won) {
 
         function endGame(isWin) {
             state.isGameOver = true;
-            ivocaStat('finish', isWin);
+            ivocaStat('finish', isWin, { war: getDifficultyName(state.difficulty), czas: state.timer });
             stopTimer();
 
             const modal = document.getElementById('modal-gameover');
