@@ -2,7 +2,8 @@
 // Statyczne pliki (assets) + skrypt src/worker.mjs tylko dla /api/* (wyzwanie dnia, baza D1 „wyzwanie-dnia”
 // wspólna z Szyfrantem). Publikacja: npx wrangler deploy. Schemat bazy: migrations/ (npx wrangler d1 migrations apply wyzwanie-dnia --remote)
 {
-  "name": "dark-truth-0072",
+  "name": "sudoku-ivoca",
+  "account_id": "9704556299e8fe103cdd795f4ad654eb",
   "main": "src/worker.mjs",
   "compatibility_date": "2026-05-01",
 
@@ -14,7 +15,7 @@
   },
 
   "d1_databases": [
-    { "binding": "DB", "database_name": "wyzwanie-dnia", "database_id": "74e24120-ba92-4ed9-add7-3da4a6d8c693" }
+    { "binding": "DB", "database_name": "wyzwanie-dnia", "database_id": "7a56ae11-2493-46be-9f64-b73f1ff05e13" }
   ],
 
   // Limit zapytań POST z jednego adresu (każda cyfra wyzwania to jedno zapytanie) (liczy Cloudflare, adresów nie zapisujemy)
@@ -28,6 +29,6 @@
   "workers_dev": false,
   "preview_urls": false,
   "routes": [
-    { "pattern": "sudoku.ivoca.pl", "custom_domain": true }
+    { "pattern": "sudoku.ivoca.org", "custom_domain": true }
   ]
 }

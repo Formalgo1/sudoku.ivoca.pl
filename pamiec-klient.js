@@ -8,7 +8,7 @@
 // (sessionStorage); po nieudanym wczytaniu kolejne pytanie próbuje ramkę wczytać od nowa.
 (function () {
   'use strict';
-  var MOST = window.IVOCA_PAMIEC_URL || 'https://ivoca.pl/pamiec.html';
+  var MOST = window.IVOCA_PAMIEC_URL || 'https://ivoca.pl/pamiec.html?v=2';   // ?v=2: wersja przyjmująca gry z *.ivoca.org
   var ramka = null, gotowa = null, gotowaOk = null, sluchacz = false, nr = 0, czekaja = {};
 
   function zaladuj() {
