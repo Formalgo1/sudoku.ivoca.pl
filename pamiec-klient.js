@@ -1,14 +1,15 @@
 // „Zapamiętaj mnie” w wyzwaniach dnia — klient po stronie gry (Szyfrant, Sudoku, Puzzle, Jazda).
 // Ten sam plik jest we wszystkich czterech repozytoriach; zmiany wprowadzać we wszystkich.
 //
-// Opcję włącza się na stronie głównej ivoca.pl. Gra pyta ukrytą ramkę https://ivoca.pl/pamiec.html
-// o identyfikator i token na dany dzień. Ramka wylicza je z klucza zapisanego na ivoca.pl osobno dla
+// Opcję włącza się na stronie głównej ivoca.org. Gra pyta ukrytą ramkę https://ivoca.org/pamiec.html
+// o identyfikator i token na dany dzień. Ramka wylicza je z klucza zapisanego na ivoca.org osobno dla
 // każdej gry i każdego dnia (do 30 dni wstecz); sam klucz nie trafia do gry ani na serwer.
 // Gdy opcja jest wyłączona albo ramka nie odpowie (8 s na wczytanie, 5 s na odpowiedź), gra działa jak dawniej
 // (sessionStorage); po nieudanym wczytaniu kolejne pytanie próbuje ramkę wczytać od nowa.
 (function () {
   'use strict';
-  var MOST = window.IVOCA_PAMIEC_URL || 'https://ivoca.pl/pamiec.html?v=2';   // ?v=2: wersja przyjmująca gry z *.ivoca.org
+  // Most musi być w tej samej witrynie co gra (ivoca.org): przeglądarki dzielą pamięć ramek z innych witryn
+  var MOST = window.IVOCA_PAMIEC_URL || 'https://ivoca.org/pamiec.html';
   var ramka = null, gotowa = null, gotowaOk = null, sluchacz = false, nr = 0, czekaja = {};
 
   function zaladuj() {
@@ -29,7 +30,7 @@
       gotowaOk = function () { clearTimeout(t); ok(true); };
       ramka = document.createElement('iframe');
       ramka.src = MOST;
-      ramka.title = 'ivoca.pl – pamięć gracza';
+      ramka.title = 'ivoca.org – pamięć gracza';
       ramka.setAttribute('aria-hidden', 'true');
       ramka.tabIndex = -1;
       ramka.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden';

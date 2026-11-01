@@ -228,7 +228,7 @@ function ivocaStat(event, won) {
     </main>
 
     <footer class="text-center text-xs text-slate-500 dark:text-slate-400 px-4 pb-6 [&_a]:underline [&_a]:text-brand-600 dark:[&_a]:text-brand-400">
-      <a href="projekt.html">O projekcie</a> · <a href="projekt.html#regulamin">Regulamin</a> · <a href="projekt.html#prywatnosc">Polityka prywatności</a> · <a href="projekt.html#kontakt">Kontakt</a> · <a href="https://ivoca.pl">Zobacz inne</a>
+      <a href="projekt.html">O projekcie</a> · <a href="projekt.html#regulamin">Regulamin</a> · <a href="projekt.html#prywatnosc">Polityka prywatności</a> · <a href="projekt.html#kontakt">Kontakt</a> · <a href="https://ivoca.org">Zobacz inne</a>
     </footer>
 
     <!-- Modal Zasad / Instrukcji -->
@@ -550,7 +550,7 @@ function ivocaStat(event, won) {
                 yes.addEventListener('click', () => {
                     yes.disabled = no.disabled = true;
                     (window.ivocaPamiec ? ivocaPamiec.gracz(d.dzien, true) : Promise.resolve(null)).then(function (pm) {
-                      var ja = pm || sess.get('wyzwanie-gracz') || {};   // „Zapamiętaj mnie” (ivoca.pl) albo ta karta
+                      var ja = pm || sess.get('wyzwanie-gracz') || {};   // „Zapamiętaj mnie” (ivoca.org) albo ta karta
                       return api('zapisz', { sesja: d.sesja, gracz: ja.gracz, token: ja.token });
                     }).then(r => {
                         sess.set('wyzwanie-gracz', { gracz: r.gracz, token: r.token });
@@ -580,7 +580,7 @@ function ivocaStat(event, won) {
             initTheme();
             initBoardUI();
             bindEvents();
-            // link z ivoca.pl: sudoku.ivoca.org/?wyzwanie od razu otwiera wyzwanie dnia
+            // link z ivoca.org: sudoku.ivoca.org/?wyzwanie od razu otwiera wyzwanie dnia
             if (/[?&]wyzwanie\b/.test(location.search)) {
                 // karta otwarta w tle nie zaczyna wyzwania, dopóki nie stanie się widoczna
                 const go = () => { if (!document.hidden) { document.removeEventListener('visibilitychange', go); startDaily(); } };

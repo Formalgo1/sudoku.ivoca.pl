@@ -65,7 +65,7 @@ footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top
 
   <p class="note">Inne wyzwania dnia: <a href="https://szyfrant.ivoca.org/ranking">Szyfrant</a> · <a href="https://puzzle.ivoca.org/ranking">Puzzle</a></p>
 
-  <footer><a href="projekt.html">O projekcie</a> · <a href="projekt.html#prywatnosc">Polityka prywatności</a> · <a href="https://ivoca.pl">Zobacz inne</a></footer>
+  <footer><a href="projekt.html">O projekcie</a> · <a href="projekt.html#prywatnosc">Polityka prywatności</a> · <a href="https://ivoca.org">Zobacz inne</a></footer>
 </div>
 <script>
 (function () {
@@ -85,7 +85,7 @@ footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top
 
   function opisz(pm, g) {
     $('me').textContent = pm
-      ? 'Ta przeglądarka pamięta Cię w wyzwaniach dnia (ivoca.pl → „Zapamiętaj mnie”). Twój identyfikator z tego dnia: #' + pm.gracz + ' — inny w każdej grze i każdego dnia. Twój wynik jest podświetlony.'
+      ? 'Ta przeglądarka pamięta Cię w wyzwaniach dnia (ivoca.org → „Zapamiętaj mnie”). Twój identyfikator z tego dnia: #' + pm.gracz + ' — inny w każdej grze i każdego dnia. Twój wynik jest podświetlony.'
       : g && g.gracz ? 'Twój identyfikator w tej karcie przeglądarki: #' + g.gracz + ' (Twój wynik jest podświetlony). Zapamiętaj identyfikator, jeśli chcesz sprawdzić wyniki wyzwania po zamknięciu karty przeglądarki.' : '';
   }
   function dzisPL() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Warsaw', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
@@ -94,7 +94,7 @@ footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top
     var list = $('list');
     list.innerHTML = '<p class="empty">Wczytuję…</p>';
     var dz = dzien || dzisPL();
-    // tożsamość z ivoca.pl czekamy najwyżej 2,5 s; gdy dotrze później, lista wczyta się jeszcze raz z podświetleniem
+    // tożsamość z ivoca.org czekamy najwyżej 2,5 s; gdy dotrze później, lista wczyta się jeszcze raz z podświetleniem
     var pmP = window.ivocaPamiec ? ivocaPamiec.gracz(dz) : Promise.resolve(null);
     Promise.race([pmP, new Promise(function (r) { setTimeout(function () { r(undefined); }, 2500); })])
       .then(function (pm) {
