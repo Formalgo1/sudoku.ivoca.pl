@@ -65,8 +65,8 @@
 <script>
 // Anonimowe statystyki gry (powiadom.ivoca.pl/v1/stats): tylko „rozpoczęta” / „ukończona”, bez danych o graczu.
 function ivocaStat(event, won, dane) {
-  // profil gracza na ivoca.org (ivoca-profil.js): zdarzenie z wariantem i wynikiem, zapisywane tylko w przeglądarce
-  try { (window.ivocaProfilQ = window.ivocaProfilQ || []).push([event, won, dane]); } catch (e) {}
+  // „Moje wyniki” na ivoca.org (ivoca-wyniki.js): zdarzenie z wariantem i wynikiem, zapisywane tylko w przeglądarce
+  try { (window.ivocaWynikiQ = window.ivocaWynikiQ || []).push([event, won, dane]); } catch (e) {}
   try {
     var body = { event: event };
     if (typeof won === 'boolean') body.won = won;
@@ -74,7 +74,7 @@ function ivocaStat(event, won, dane) {
   } catch (e) {}
 }
 </script>
-<script src="/ivoca-profil.js" defer></script>
+<script src="/ivoca-wyniki.js" defer></script>
 <script src="/pamiec-klient.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">

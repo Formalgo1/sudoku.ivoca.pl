@@ -1,19 +1,28 @@
-// Profil gracza ivoca.org — klient po stronie gry (wspólny plik z repo ivoca-wspolne, kopiowany do js/ każdej gry).
+// „Moje wyniki” na ivoca.org — klient po stronie gry (wspólny plik z repo ivoca-wspolne, kopiowany do js/ każdej gry).
 //
 // Gra woła ivocaStat(zdarzenie, wygrana, dane) jak dotąd; funkcja ivocaStat odkłada zdarzenie do
-// window.ivocaProfilQ, a ten plik przekazuje je ukrytej ramce https://ivoca.org/pamiec.html.
-// Ramka zapisuje statystyki w profilu na ivoca.org TYLKO wtedy, gdy na tym urządzeniu włączone jest
-// „Zapamiętaj mnie” — inaczej je odrzuca. Nic nie trafia na serwer: profil istnieje tylko w przeglądarce.
+// window.ivocaWynikiQ, a ten plik przekazuje je ukrytej ramce https://ivoca.org/pamiec.html.
+// Ramka zapisuje statystyki w „Moich wynikach” na ivoca.org TYLKO wtedy, gdy na tym urządzeniu włączone jest
+// „Zapamiętaj mnie” — inaczej je odrzuca. Nic nie trafia na serwer: wyniki istnieją tylko w przeglądarce.
 //
 // Ramka wczytuje się dopiero przy pierwszym zdarzeniu (nie przy wejściu na stronę). Gdy nie odpowie
-// (np. gra bez internetu), zdarzenia czekają w localStorage gry („ivoca-profil-kolejka”, najwyżej 50,
+// (np. gra bez internetu), zdarzenia czekają w localStorage gry („ivoca-wyniki-kolejka”, najwyżej 50,
 // najwyżej 30 dni) i idą przy kolejnej okazji.
 (function () {
   'use strict';
-  if (window.ivocaProfilQ && window.ivocaProfilQ.gotowy) return;
-  // ?v= omija kopię mostu z pamięci przeglądarki (pamiec.html ma max-age=86400) — podbić przy zmianie obsługi profilu w moście
-  var MOST = window.IVOCA_PAMIEC_URL || 'https://ivoca.org/pamiec.html?v=2';
-  var KOLEJKA = 'ivoca-profil-kolejka', MAKS = 50, WIEK = 30 * 24 * 3600 * 1000;
+  if (window.ivocaWynikiQ && window.ivocaWynikiQ.gotowy) return;
+  // ?v= omija kopię mostu z pamięci przeglądarki (pamiec.html ma max-age=86400) — podbić przy zmianie obsługi wyników w moście
+  var MOST = window.IVOCA_PAMIEC_URL || 'https://ivoca.org/pamiec.html?v=3';
+  var KOLEJKA = 'ivoca-wyniki-kolejka', MAKS = 50, WIEK = 30 * 24 * 3600 * 1000;
+  // dawna kolejka „ivoca-profil-kolejka” (do 01.11.2026) — dołączamy do nowej
+  try {
+    var st = JSON.parse(localStorage.getItem('ivoca-profil-kolejka') || 'null');
+    if (Array.isArray(st)) {
+      var nw = JSON.parse(localStorage.getItem(KOLEJKA) || '[]');
+      localStorage.setItem(KOLEJKA, JSON.stringify(st.concat(Array.isArray(nw) ? nw : []).slice(-MAKS)));
+    }
+    localStorage.removeItem('ivoca-profil-kolejka');
+  } catch (e) {}
   var ramka = null, gotowa = null, gotowaOk = null, sluchacz = false, nr = 0, czekaja = {}, zegar = null, wysyla = false;
   var origin;
   try { origin = new URL(MOST, location.href).origin; } catch (e) { return; }
@@ -59,13 +68,13 @@
         window.addEventListener('message', function (ev) {
           if (ev.origin !== origin || !ramka || ev.source !== ramka.contentWindow || !ev.data) return;
           if (ev.data.typ === 'ivoca-pamiec-gotowa') { if (gotowaOk) gotowaOk(); }
-          else if (ev.data.typ === 'ivoca-profil' && czekaja[ev.data.nr]) { czekaja[ev.data.nr](ev.data); delete czekaja[ev.data.nr]; }
+          else if (ev.data.typ === 'ivoca-wyniki' && czekaja[ev.data.nr]) { czekaja[ev.data.nr](ev.data); delete czekaja[ev.data.nr]; }
         });
       }
       gotowaOk = function () { clearTimeout(t); ok(true); };
       ramka = document.createElement('iframe');
       ramka.src = MOST;
-      ramka.title = 'ivoca.org – profil gracza';
+      ramka.title = 'ivoca.org – moje wyniki';
       ramka.setAttribute('aria-hidden', 'true');
       ramka.tabIndex = -1;
       ramka.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden';
@@ -87,7 +96,7 @@
         var n = ++nr;
         var t = setTimeout(function () { delete czekaja[n]; wynik(null); }, 5000);
         czekaja[n] = function (d) { clearTimeout(t); wynik(d); };
-        ramka.contentWindow.postMessage({ typ: 'ivoca-profil', nr: n, zdarzenia: k }, origin);
+        ramka.contentWindow.postMessage({ typ: 'ivoca-wyniki', nr: n, zdarzenia: k }, origin);
       });
     }).then(function (odp) {
       if (!odp || !odp.ok) return false;
@@ -105,9 +114,9 @@
   function planuj(ms) { if (zegar) clearTimeout(zegar); zegar = setTimeout(wyslij, ms); }
 
   // zdarzenia odłożone przed wczytaniem tego pliku
-  var stare = Array.isArray(window.ivocaProfilQ) ? window.ivocaProfilQ : [];
-  window.ivocaProfilQ = { gotowy: true, push: function (a) { if (a && a.length) dodaj(a[0], a[1], a[2]); } };
-  stare.forEach(function (a) { window.ivocaProfilQ.push(a); });
+  var stare = Array.isArray(window.ivocaWynikiQ) ? window.ivocaWynikiQ : [];
+  window.ivocaWynikiQ = { gotowy: true, push: function (a) { if (a && a.length) dodaj(a[0], a[1], a[2]); } };
+  stare.forEach(function (a) { window.ivocaWynikiQ.push(a); });
   // zaległe zdarzenia z poprzednich wizyt (np. gra bez internetu) — gdy strona się wczyta
   if (!stare.length && wczytaj().length) {
     if (document.readyState === 'complete') planuj(2000);
