@@ -1,6 +1,6 @@
 # Sudoku
 
-Klasyczne sudoku w przeglądarce (sudoku.ivoca.pl), cztery poziomy trudności, plus wyzwanie dnia z publicznym rankingiem.
+Klasyczne sudoku w przeglądarce (sudoku.ivoca.org), cztery poziomy trudności, plus wyzwanie dnia z publicznym rankingiem.
 
 ## Zawartość
 
@@ -13,6 +13,10 @@ src/wyzwanie.mjs część wspólna wyzwania dnia — TEN SAM plik jest w szyfran
 src/sudoku-gen.mjs generator i sprawdzanie plansz
 build/plansze-wyzwania.mjs plansze dnia na zapas (SQL do bazy D1)
 migrations/      schemat bazy D1 „wyzwanie-dnia” (wspólnej z Szyfrantem i Puzzlami)
+manifest.webmanifest, sw.js  PWA: instalacja i zwykła gra bez internetu (przy każdej zmianie plików podbić VERSION; /api/ nigdy z pamięci)
+_headers         nagłówki bezpieczeństwa (Cloudflare)
+js/wyglad.js     okienko „Aa” (kopia z ivoca-wspolne)
+fonts/           Inter (czcionka standardowa) i Atkinson Hyperlegible Next (czcionka „Wyraźna”), licencje OFL
 ```
 
 ## Wyzwanie dnia
@@ -27,4 +31,12 @@ migrations/      schemat bazy D1 „wyzwanie-dnia” (wspólnej z Szyfrantem i P
 
 ## Publikacja
 
-`npx wrangler deploy` (Worker `dark-truth-0072`, domena sudoku.ivoca.pl). Wyjątki w `.assetsignore`.
+`XDG_CONFIG_HOME=~/.config/wrangler-ivoca-org npx wrangler deploy` (Worker `sudoku-ivoca` na koncie stowarzyszenia, domena sudoku.ivoca.org). Wyjątki w `.assetsignore`.
+
+## Dostępność i dane
+
+Pola planszy to przyciski z opisem (`opisPola`) i jednym punktem wejścia Tabem; okna: `otworzOkno` / `zamknijOkna` (fokus, `inert`, Esc). Klawiatura: strzałki, 1–9, Backspace/Delete, N (ołówek), Ctrl+Z, Ctrl+Y. Po zmianie klas w `index.html` przebudować `vendor/tailwind.css` (`build/README.md`).
+
+Klucze `localStorage`: `sudoku-gra` (rozpoczęta gra), `sudoku_stats`, `sudoku_opts`, `sudoku-wyzwanie`, oraz wspólne `theme`, `font`, `textSize`.
+
+Test wzoru: `BASE=http://127.0.0.1:8793 node ~/.cache/puzzle-test/sudoku-wzor-test.js` (axe + kontrast w 4 wariantach, klawiatura, jeden ekran, offline, szyfrowany formularz; `SHOTS=1` = zrzuty w /tmp).

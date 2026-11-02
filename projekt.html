@@ -3,37 +3,76 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="icon" href="/img/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <title>Projekt — Sudoku</title>
+  <meta name="theme-color" id="theme-color" content="#f8fafc">
+  <script>
+    // Motyw, czcionka i rozmiar tekstu przed wyrenderowaniem strony (te same klucze co w grze i na ivoca.org)
+    (function () {
+      var d = document.documentElement, t = null, f = null, s = null;
+      try { t = localStorage.getItem('theme'); f = localStorage.getItem('font'); s = localStorage.getItem('textSize'); } catch (e) {}
+      if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) d.classList.add('dark');
+      if (f === 'wyrazna') d.setAttribute('data-font', 'wyrazna');
+      if (s === 'wiekszy' || s === 'najwiekszy') d.setAttribute('data-size', s);
+      var m = document.getElementById('theme-color');
+      if (m && d.classList.contains('dark')) m.setAttribute('content', '#0f172a');
+    })();
+  </script>
   <meta name="description" content="O projekcie Sudoku, regulamin serwisu, polityka prywatności i formularz kontaktowy.">
-  <script>try { var t = localStorage.getItem('theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; } catch (e) {}</script>
   <style>
-:root { --bg:#f8fafc;--card:#ffffff;--ink:#1e293b;--soft:#64748b;--line:#e2e8f0;--accent:#2563eb;--accent-ink:#ffffff; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--soft:#94a3b8;--line:#334155;--accent:#60a5fa;--accent-ink:#0f172a; } }
-:root[data-theme="dark"] { --bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--soft:#94a3b8;--line:#334155;--accent:#60a5fa;--accent-ink:#0f172a; }
+:root { --bg:#f8fafc;--card:#ffffff;--ink:#1e293b;--soft:#475569;--line:#e2e8f0;--accent:#2563eb;--accent-ink:#ffffff;--good:#15803d;--warn:#b45309;--bad:#b91c1c;--brand-text:#1d4ed8; color-scheme: light; }
+html.dark { --bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--soft:#cbd5e1;--line:#334155;--accent:#60a5fa;--accent-ink:#0f172a;--good:#34d399;--warn:#fbbf24;--bad:#f87171;--brand-text:#60a5fa; color-scheme: dark; }
+[hidden] { display: none !important; }
+@font-face { font-family: 'Atkinson Hyperlegible Next'; font-weight: 200 800; font-display: swap; src: url('/fonts/atkinson-hyperlegible-next-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Atkinson Hyperlegible Next'; font-weight: 200 800; font-display: swap; src: url('/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+:root { --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; --txt: 1; --fadj: 1; --hover: color-mix(in srgb, var(--line) 50%, transparent); }
+html[data-font="wyrazna"] { --font: 'Atkinson Hyperlegible Next', system-ui, sans-serif; --fadj: 1.06; }
+html[data-size="wiekszy"] { --txt: 1.125; }
+html[data-size="najwiekszy"] { --txt: 1.25; }
+html { font-size: calc(100% * var(--txt) * var(--fadj)); }
+.actions { display: flex; align-items: center; gap: 4px; }
+.wyglad { position: relative; }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border: 0; border-radius: 12px; background: transparent; color: var(--soft); cursor: pointer; }
+.icon-btn:hover { background: var(--hover); color: var(--ink); }
+.icon-btn:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, .table-wrap:focus-visible { outline: 2px solid var(--brand-text); outline-offset: 2px; }
+.icon-btn svg { width: 1.25rem; height: 1.25rem; }
+.sun { display: none; color: #fbbf24; }
+html.dark .sun { display: block; }
+html.dark .moon { display: none; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
-a { color: var(--accent); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 1rem/1.6 var(--font); }
+a { color: var(--brand-text); text-decoration: underline 1px color-mix(in srgb, currentColor 40%, transparent); text-underline-offset: .2em; transition: text-decoration-color .15s; }
+a:hover, a:focus-visible { text-decoration-color: currentColor; text-decoration-thickness: 2px; }
+a:focus-visible { outline: 2px solid var(--brand-text); outline-offset: 2px; border-radius: 3px; }
+.toc a, .site-footer a { font-weight: 600; text-decoration: underline 2px transparent; text-underline-offset: .25em; }
+.site-footer a { font-weight: 500; }
+.toc a:hover, .toc a:focus-visible, .site-footer a:hover, .site-footer a:focus-visible { text-decoration-color: currentColor; }
+.topbar .brand { text-decoration: none; }
+@media (prefers-reduced-motion: reduce) { a { transition: none; } }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 820px; margin: 0 auto; padding: 16px; }
-.brand { font-weight: 700; font-size: 20px; text-decoration: none; color: var(--ink); }
+.brand { font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--ink); }
 .topbar span { color: var(--soft); }
 main.doc { max-width: 820px; margin: 0 auto 24px; padding: 24px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
 @media (min-width: 860px) { main.doc { padding: 32px 40px; } }
-h1 { font-size: 28px; line-height: 1.25; margin: 0 0 12px; }
-h2 { font-size: 21px; margin: 32px 0 8px; }
-h3 { font-size: 19px; margin: 32px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
-h4 { font-size: 16px; margin: 20px 0 6px; }
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 12px; }
+h2 { font-size: 1.3125rem; margin: 32px 0 8px; }
+h3 { font-size: 1.1875rem; margin: 32px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+h4 { font-size: 1rem; margin: 20px 0 6px; }
 ol, ul { padding-left: 22px; }
 li { margin: 4px 0; }
 .muted { color: var(--soft); }
 .toc { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 8px 0 0; }
 .table-wrap { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
 th, td { border: 1px solid var(--line); padding: 8px; text-align: left; vertical-align: top; }
 th { background: color-mix(in srgb, var(--line) 40%, transparent); }
-code { font-size: 13px; }
+code { font-size: 0.8125rem; }
 form.contact { display: grid; gap: 12px; max-width: 520px; margin-top: 12px; }
 form.contact label { display: grid; gap: 4px; font-weight: 600; }
 form.contact label .muted { font-weight: 400; }
@@ -43,25 +82,33 @@ form.contact textarea { resize: vertical; min-height: 140px; }
 .button, form.contact button { display: inline-block; font: inherit; font-weight: 700; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 10px 18px; cursor: pointer; text-decoration: none; }
 form.contact button:disabled { opacity: .6; cursor: default; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-.error { color: #dc2626; margin: 0; min-height: 1em; }
-.ok { color: var(--accent); margin: 0; font-weight: 600; }
+.error { color: var(--bad, #b91c1c); margin: 0; min-height: 1em; }
+.ok { color: var(--brand-text); margin: 0; font-weight: 600; }
 .back { margin-top: 32px; }
-.site-footer { text-align: center; color: var(--soft); font-size: 13px; padding: 0 16px 32px; }
-      .channel { display: flex; gap: 8px; align-items: baseline; margin: 0; color: var(--soft); }
-    .channel .dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
-    .channel.up .dot { background: var(--good, #16a34a); }
-    .channel.down .dot { background: var(--warn, #d97706); }
-</style>
+.site-footer { text-align: center; color: var(--soft); font-size: 0.8125rem; padding: 0 16px 32px; }
+      </style>
 </head>
 <body>
   <header class="topbar">
     <a href="./" class="brand">Sudoku</a>
-    <span>Projekt</span>
+    <div class="actions">
+      <div class="wyglad"><button class="wyglad-btn" id="btn-wyglad" type="button" data-font-opis="systemowa" data-font-css="system-ui, sans-serif" aria-expanded="false" aria-controls="wyglad-panel" title="Czcionka i rozmiar tekstu" aria-label="Aa – czcionka i rozmiar tekstu" hidden>A<small>a</small></button></div>
+      <button class="icon-btn" id="btn-theme" type="button" title="Zmień motyw" aria-label="Zmień motyw">
+        <svg class="moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor" stroke="none"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </div>
   </header>
 
   <main class="doc">
     <h1>O projekcie</h1>
     <p>Sudoku to bezpłatna wersja klasycznej łamigłówki liczbowej w przeglądarce. Planszę 9×9 trzeba uzupełnić cyframi od 1 do 9 tak, by nie powtarzały się w wierszu, kolumnie ani kwadracie 3×3. Gra ma kilka poziomów trudności, podpowiedzi i tryb ciemny.</p>
+
+    <h2>Gra jako aplikacja</h2>
+    <p>Sudoku można zainstalować na telefonie lub komputerze przyciskiem „Zainstaluj” w pasku u góry (na iPhonie i iPadzie: w Safari <strong>Udostępnij</strong>, a potem <strong>Do ekranu początkowego</strong>). Zwykła gra działa wtedy także bez internetu, a rozpoczęta partia czeka na dokończenie. Wyzwanie dnia i ranking wymagają połączenia z serwerem.</p>
+
+    <h2>Wygląd i sterowanie</h2>
+    <p>W pasku u góry zmienisz motyw (jasny lub ciemny) oraz — przyciskiem „Aa” — czcionkę i rozmiar tekstu. W grę można grać samą klawiaturą: strzałki przenoszą między polami, cyfry 1–9 wpisują wartość, Backspace lub Delete usuwa, N włącza ołówek, Ctrl+Z cofa, a Ctrl+Y ponawia. Pola planszy są opisane dla czytników ekranu.</p>
 
     <h2>Prywatność i wygoda</h2>
     <p>Nie trzeba zakładać konta ani podawać żadnych danych. Wyniki i ustawienia zapisują się tylko w Twojej przeglądarce. W wyzwaniu dnia (ta sama plansza dla wszystkich) możesz — tylko jeśli chcesz — zapisać wynik na publicznej liście pod losowym identyfikatorem nadanym przez serwer, bez imienia i adresu e-mail. Serwis nie używa reklam, cookies ani zewnętrznych narzędzi analitycznych — zlicza tylko anonimowo, ile gier rozpoczęto i ukończono. Szczegóły znajdziesz w
@@ -72,7 +119,7 @@ form.contact button:disabled { opacity: .6; cursor: default; }
       <a href="mailto:ivoca@ivoca.org">ivoca@ivoca.org</a>.</p>
 
     <h2 id="kontakt">Kontakt</h2>
-    <form class="contact" id="contact-form">
+    <form class="contact" id="contact-form" action="#kontakt" novalidate>
       <label><span>Twój nick <span class="muted">(opcjonalnie)</span></span>
         <input name="name" maxlength="40" autocomplete="nickname">
       </label>
@@ -85,16 +132,21 @@ form.contact button:disabled { opacity: .6; cursor: default; }
       <label class="hp" aria-hidden="true">Strona www
         <input name="website" tabindex="-1" autocomplete="off">
       </label>
-      <p class="channel" id="contact-channel" role="status"><span class="dot" aria-hidden="true"></span>
-        <span id="contact-channel-text">Sprawdzamy, czy serwer XMPP jest dostępny…</span></p>
-      <div><button type="submit">Wyślij</button></div>
+      <noscript><p class="error">Włącz JavaScript — wiadomość szyfrujemy w Twojej przeglądarce przed wysłaniem. Możesz też napisać na <a href="mailto:ivoca@ivoca.org">ivoca@ivoca.org</a>.</p></noscript>
+      <div><button type="submit" disabled>Wyślij</button></div>
       <p class="error" id="contact-error" role="alert"></p>
       <p class="ok" id="contact-ok" role="status" hidden>Dziękujemy, wiadomość została wysłana.</p>
-      <p class="muted">Do 3 wiadomości dziennie. Zasady przetwarzania danych z formularza opisuje <a href="#prywatnosc-3">Część II, pkt 3</a>.</p>
+      <p class="muted">Wiadomość (razem z nickiem i adresem e-mail) jest szyfrowana w Twojej przeglądarce kluczem OpenPGP Usługodawcy i trafia do niego zaszyfrowaną pocztą — serwer jej nie widzi.
+        Do 5 wiadomości dziennie. Zasady przetwarzania danych z formularza opisuje <a href="#prywatnosc-3">Część II, pkt 3</a>.</p>
     </form>
+    <h3 id="klucz" style="border-top:0;padding-top:0;margin-top:24px">Zaszyfrowany e-mail</h3>
+    <p>Możesz też napisać zaszyfrowanego e-maila (OpenPGP) na <a href="mailto:ivoca@ivoca.org">ivoca@ivoca.org</a>.
+      Klucz publiczny tego adresu: <a href="https://ivoca.org/szyfr/klucz.asc" download="ivoca-org-klucz-publiczny.asc">klucz.asc</a>,
+      odcisk <code>D0EE 1514 1D89 71E3 6B05 5436 3936 F55A B372 CF68</code> — przed użyciem sprawdź, czy się zgadza.
+      Programy obsługujące WKD (np. Thunderbird, Proton Mail, GnuPG) znajdą klucz same po adresie e-mail.</p>
 
     <h2 id="regulamin">Regulamin serwisu Sudoku wraz z polityką prywatności</h2>
-    <p class="muted">Obowiązuje od 01.11.2026.</p>
+    <p class="muted">Obowiązuje od 02.11.2026.</p>
     <nav class="toc" aria-label="Spis treści">
       <a href="#regulamin-czesc-1">Część I. Regulamin</a>
       <a href="#prywatnosc">Część II. Polityka prywatności</a>
@@ -121,7 +173,7 @@ form.contact button:disabled { opacity: .6; cursor: default; }
     </ol>
 
     <h4 id="regulamin-3">§3. Wymagania techniczne</h4>
-    <p>Do korzystania z Serwisu potrzebne są dostęp do internetu oraz aktualna przeglądarka z włączoną
+    <p>Do korzystania z Serwisu potrzebne są dostęp do internetu (zainstalowana zwykła gra działa też bez niego) oraz aktualna przeglądarka z włączoną
       obsługą JavaScriptu i pamięci lokalnej (localStorage).</p>
 
     <h4 id="regulamin-4">§4. Zasady korzystania</h4>
@@ -170,23 +222,22 @@ form.contact button:disabled { opacity: .6; cursor: default; }
       Część danych technicznych (np. adres IP) przekazuje automatycznie Twoja przeglądarka.</p>
 
     <h4 id="prywatnosc-3">3. Jakie dane, w jakim celu i jak długo</h4>
-    <div class="table-wrap">
+    <div class="table-wrap" tabindex="0" role="region" aria-labelledby="prywatnosc-3">
       <table>
         <thead>
           <tr><th>Dane</th><th>Cel i podstawa prawna</th><th>Okres przechowywania</th></tr>
         </thead>
         <tbody>
-          <tr><td>Dane w pamięci przeglądarki (localStorage): statystyki gier i wybrany motyw jasny lub ciemny (<code>sudoku_stats</code>, <code>theme</code>)</td><td>Działanie i wygoda gry, przechowywane wyłącznie na Twoim urządzeniu. Nie trafiają na serwer</td><td>Do wyczyszczenia danych przeglądarki</td></tr>
+          <tr><td>Dane w pamięci przeglądarki (localStorage): rozpoczęta gra (<code>sudoku-gra</code>), statystyki gier (<code>sudoku_stats</code>), ustawienia (<code>sudoku_opts</code>), wybrany motyw (<code>theme</code>), czcionka i rozmiar tekstu (<code>font</code>, <code>textSize</code>); pamięć podręczna aplikacji (Cache Storage) z plikami gry</td><td>Działanie i wygoda gry, w tym praca bez internetu, przechowywane wyłącznie na Twoim urządzeniu. Nie trafiają na serwer</td><td>Do wyczyszczenia danych przeglądarki</td></tr>
           <tr><td>Adres IP i dane techniczne żądań</td><td>Dostarczanie strony i ochrona przed nadużyciami przez Cloudflare (Cloudflare Workers), art. 6 ust. 1 lit. f RODO (uzasadniony interes)</td><td>Zgodnie z zasadami Cloudflare. Serwis sam nie zapisuje adresów IP (limit zapytań w wyzwaniu dnia liczy Cloudflare w pamięci, bez zapisu)</td></tr>
           <tr><td>Wyzwanie dnia — rozgrywka: losowy identyfikator gry, data, wpisane cyfry (każdą sprawdza serwer) i liczba błędów, czas rozpoczęcia i zakończenia</td><td>Sprawdzanie gry po stronie serwera i uczciwe liczenie czasu, żeby wyniki graczy były porównywalne, art. 6 ust. 1 lit. f RODO</td><td>Baza danych Cloudflare D1 (Cloudflare, Inc.), usuwane automatycznie po 2 dniach</td></tr>
           <tr><td>Wyzwanie dnia — wynik na publicznej liście (tylko po wybraniu „Opublikuj wynik”): losowy identyfikator gracza (nadany przez serwer albo — przy „Zapamiętaj mnie” — wyliczony przez Twoją przeglądarkę, inny każdego dnia), data, czas rozwiązania i liczba błędów, czas zapisu oraz skrót (hash) tokenu, dzięki któremu kolejne wyniki z tej samej karty przeglądarki trafiają pod ten sam identyfikator</td><td>Publiczny ranking wyzwania dnia, na Twoje życzenie, art. 6 ust. 1 lit. a RODO (zgoda wyrażona przyciskiem „Opublikuj wynik”). Identyfikator nie jest łączony z żadnymi danymi o osobie</td><td>Baza danych Cloudflare D1 (Cloudflare, Inc.), jako historia rankingów — do odwołania zgody: napisz, podając swój identyfikator, a wynik usuniemy. Identyfikator bez żadnego zapisanego wyniku jest usuwany po 2 dniach</td></tr>
           <tr><td>Dane w pamięci sesji przeglądarki (sessionStorage): identyfikator i token gracza (<code>wyzwanie-gracz</code>) i informacja o zapisanym wyniku (<code>wyzwanie-zapisano</code>)</td><td>Podświetlenie własnego wyniku na liście — przy wczytywaniu listy identyfikator jest wysyłany do serwera tylko po to, żeby oznaczyć Twój wiersz</td><td>Do zamknięcia karty przeglądarki</td></tr>
           <tr><td>„Zapamiętaj mnie” (tylko gdy włączysz tę opcję na <a href="https://ivoca.org/">ivoca.org</a>): przy rozpoczęciu wyzwania, zapisie wyniku i w rankingu gra wczytuje w ukrytej ramce stronę <code>ivoca.org/pamiec.html</code>, która zwraca identyfikator i token gracza wyliczone z klucza zapisanego w Twojej przeglądarce na ivoca.org — osobno dla tej gry i dla każdego dnia</td><td>Zapis wyniku pod Twoim identyfikatorem z danego dnia, ochrona przed drugim wynikiem tego samego dnia i podświetlenie własnego wyniku w rankingach do 30 dni wstecz, art. 6 ust. 1 lit. a RODO (zgoda wyrażona na ivoca.org). Bez włączonej opcji ramka niczego nie zwraca. Wczytanie ramki to zwykłe żądanie do ivoca.org (Cloudflare i SEOHOST — zob. <a href="https://ivoca.org/projekt.html#prywatnosc">politykę prywatności ivoca.org</a>)</td><td>Gra nie przechowuje identyfikatora ani klucza. Klucz jest na ivoca.org przez 30 dni od ostatniej gry w wyzwanie dnia — do wybrania „Zapomnij mnie” albo wyczyszczenia danych przeglądarki</td></tr>
           <tr><td>Dane w pamięci przeglądarki (localStorage): stan dzisiejszego wyzwania dnia — wpisane cyfry, czas i wynik (<code>sudoku-wyzwanie</code>)</td><td>Dokończenie wyzwania po odświeżeniu strony lub w nowej karcie i rozegranie wyzwania tylko raz dziennie w tej przeglądarce. Nie trafiają na serwer poza samą grą</td><td>Do następnego dnia (usuwane przy pierwszym wejściu na stronę kolejnego dnia) albo do wyczyszczenia danych przeglądarki</td></tr>
-          <tr><td>Formularz kontaktowy: nick i adres e-mail (oba opcjonalne), treść wiadomości, czas wysłania, adres strony, z której wysłano wiadomość, oraz skrót (hash) adresu IP</td><td>Odpowiedź na pytania i reklamacje oraz limit 3 wiadomości na dobę z jednego adresu, art. 6 ust. 1 lit. f RODO</td><td>Wiadomość przechodzi przez bramkę powiadomień Usługodawcy (powiadom.ivoca.pl, serwer Usługodawcy w Polsce), która przechowuje ją tylko do przekazania dalej: zwykle kilka sekund, gdy komunikator jest niedostępny — do 24 godzin, a wiadomość, której nie udało się przekazać — najwyżej 7 dni. Trafia jako wiadomość na komunikator XMPP Usługodawcy (xmpp.ivoca.pl, ten sam serwer), którego archiwum usuwa ją po 7 dniach, a gdy to niemożliwe — e-mailem do skrzynki Usługodawcy u SEOHOST Sp. z o.o. Kopie w aplikacji komunikatora i w skrzynce e-mail Usługodawca usuwa po załatwieniu sprawy, najpóźniej po 90 dniach. Skrót adresu IP jest trzymany tylko w pamięci bramki przez dobę</td></tr>
-          <tr><td>Statystyki gry: informacja, że gra została rozpoczęta albo ukończona (i czy wygrana), oraz skrót (hash) adresu IP</td><td>Wiedza o tym, jak często gra jest używana, oraz ochrona przed nadużyciami (limit zdarzeń na dobę z jednego adresu), art. 6 ust. 1 lit. f RODO</td><td>Bramka powiadomień Usługodawcy (powiadom.ivoca.pl, serwer Usługodawcy w Polsce) dolicza zdarzenie do dziennych liczników gry — bez adresu IP, cookies i identyfikatora gracza — i przechowuje liczniki najwyżej 400 dni. Raz dziennie Usługodawca dostaje ich podsumowanie na komunikator XMPP. Skrót adresu IP jest trzymany tylko w pamięci bramki przez dobę</td></tr>
+          <tr><td>Formularz kontaktowy: nick i adres e-mail (oba opcjonalne), treść wiadomości i czas wysłania oraz skrót (hash) adresu IP</td><td>Odpowiedź na pytania i reklamacje oraz limit 5 wiadomości na dobę z jednego adresu, art. 6 ust. 1 lit. f RODO. Nick, adres e-mail i treść są szyfrowane w Twojej przeglądarce standardem OpenPGP kluczem publicznym Usługodawcy, zanim cokolwiek zostanie wysłane; odczytać je można tylko kluczem prywatnym przechowywanym na sprzętowym kluczu bezpieczeństwa Usługodawcy. Zaszyfrowaną wiadomość przyjmuje serwis ivoca.org (hosting SEOHOST Sp. z o.o.), który przekazuje ją pocztą e-mail i niczego nie zapisuje poza skrótem adresu IP do limitu</td><td>Zaszyfrowana wiadomość trafia do skrzynki pocztowej Usługodawcy u SEOHOST Sp. z o.o.; Usługodawca usuwa ją po załatwieniu sprawy, najpóźniej po 90 dniach. Skrót adresu IP jest usuwany po dobie</td></tr>
+          <tr><td>Statystyki gry: informacja, że gra została rozpoczęta albo ukończona (i czy wygrana), oraz skrót (hash) adresu IP</td><td>Wiedza o tym, jak często gra jest używana, oraz ochrona przed nadużyciami (limit zdarzeń na dobę z jednego adresu), art. 6 ust. 1 lit. f RODO</td><td>Bramka powiadomień Usługodawcy (powiadom.ivoca.pl, serwer Usługodawcy w Polsce) dolicza zdarzenie do dziennych liczników gry — bez adresu IP, cookies i identyfikatora gracza — i przechowuje liczniki najwyżej 400 dni. Raz dziennie Usługodawca dostaje ich podsumowanie. Skrót adresu IP jest trzymany tylko w pamięci bramki przez dobę</td></tr>
           <tr><td>Moje wyniki na ivoca.org (tylko gdy w tej przeglądarce włączone jest „Zapamiętaj mnie” na stronie głównej ivoca.org): informacja o rozpoczęciu i zakończeniu gry, wariant (np. poziom trudności), wygrana albo przegrana i wynik (czas, ruchy lub punkty)</td><td>Pokazanie Ci Twoich statystyk i rekordów ze wszystkich gier w oknie „Moje wyniki” na ivoca.org — na Twoje życzenie, art. 6 ust. 1 lit. a RODO (zgoda wyrażona przyciskiem „Zapamiętaj mnie”). Gra przekazuje te dane ukrytej ramce <code>ivoca.org/pamiec.html</code>, która zapisuje je w pamięci Twojej przeglądarki (localStorage ivoca.org, <code>ivoca-wyniki</code>) tylko wtedy, gdy opcja jest włączona — inaczej je odrzuca. Dane nie trafiają na serwer ani do rankingów i nie są łączone z innymi urządzeniami. Gdy ramka chwilowo nie odpowiada (np. bez internetu), zdarzenia czekają w pamięci przeglądarki tej gry (localStorage, <code>ivoca-wyniki-kolejka</code>)</td><td>W „Moich wynikach”: do wybrania „Zapomnij mnie” lub „Wyczyść statystyki”, do wygaśnięcia zapamiętania (30 dni bez gry) albo do wyczyszczenia danych przeglądarki. W kolejce gry: do przekazania ramce, najwyżej 30 dni</td></tr>
-          <tr><td>Sprawdzenie, czy komunikator XMPP działa (gdy formularz kontaktowy pojawi się na ekranie)</td><td>Pokazanie, czy wiadomość z formularza pójdzie przez komunikator XMPP, czy e-mailem. Przeglądarka pyta o to bramkę powiadom.ivoca.pl; zapytanie nie zawiera danych z formularza, art. 6 ust. 1 lit. f RODO</td><td>Bramka nie zapisuje tego zapytania</td></tr>
           <tr><td>Adres e-mail i treść korespondencji wysłanej bezpośrednio e-mailem</td><td>Odpowiedź na pytania i reklamacje, art. 6 ust. 1 lit. f RODO</td><td>Do załatwienia sprawy, potem najdłużej 90 dni</td></tr>
         </tbody>
       </table>
@@ -198,9 +249,9 @@ form.contact button:disabled { opacity: .6; cursor: default; }
 
     <h4 id="prywatnosc-4">4. Odbiorcy danych</h4>
     <ol>
-      <li>Cloudflare, Inc. hostuje grę (Cloudflare Workers) i bazę wyzwania dnia (Cloudflare D1, region Europa Wschodnia) oraz pośredniczy w ruchu do gry i do bramki powiadomień, przetwarzając adresy IP.</li>
-      <li>Bramka powiadomień i komunikator XMPP działają na serwerze Usługodawcy w Polsce.</li>
-      <li>SEOHOST Sp. z o.o. obsługuje pocztę e-mail Usługodawcy, przez którą przychodzą wiadomości wysłane e-mailem, a zapasowo także wiadomości z formularza kontaktowego.</li>
+      <li>Cloudflare, Inc. hostuje grę (Cloudflare Workers), bazę wyzwania dnia (Cloudflare D1, region Europa Wschodnia) i pośredniczy w ruchu do gry, do serwisu ivoca.org i do bramki statystyk, przetwarzając adresy IP.</li>
+      <li>Bramka statystyk (powiadom.ivoca.pl) działa na serwerze w Polsce.</li>
+      <li>SEOHOST Sp. z o.o. hostuje serwis ivoca.org, który przyjmuje wiadomości z formularza kontaktowego, i obsługuje pocztę e-mail Usługodawcy, przez którą przychodzą wiadomości wysłane e-mailem oraz — wyłącznie w postaci zaszyfrowanej, której SEOHOST nie może odczytać — wiadomości z formularza kontaktowego. Widoczne pozostają dane techniczne: czas wysłania i adres IP w logach serwera.</li>
       <li>Dane nie są sprzedawane ani udostępniane w celach marketingowych.</li>
     </ol>
 
@@ -227,6 +278,8 @@ form.contact button:disabled { opacity: .6; cursor: default; }
     <ol>
       <li>Biblioteka Tailwind CSS (licencja MIT), ikony Font Awesome Free (<a href="vendor/fontawesome/LICENSE.txt">licencja</a>: CC BY 4.0 dla ikon, SIL OFL 1.1 dla czcionek, MIT dla kodu) i biblioteka canvas-confetti (<a href="vendor/confetti-LICENSE.txt">licencja ISC</a>) są hostowane razem z grą.</li>
       <li>Czcionka Inter (© The Inter Project Authors) jest dostępna na licencji SIL Open Font License 1.1 i hostowana razem z grą. Pełny tekst licencji: <a href="fonts/OFL-Inter.txt">OFL-Inter.txt</a>.</li>
+      <li>Czcionka Atkinson Hyperlegible Next (© Braille Institute of America, Inc.), używana po wybraniu czcionki „Wyraźna”, jest dostępna na licencji SIL Open Font License 1.1 i hostowana razem z grą. Pełny tekst licencji: <a href="fonts/AtkinsonHyperlegibleNext-OFL.txt">AtkinsonHyperlegibleNext-OFL.txt</a>.</li>
+      <li>Wiadomości z formularza kontaktowego szyfruje biblioteka OpenPGP.js (© OpenPGP.js Development Team) na licencji GNU LGPL 3.0 lub nowszej, ładowana z serwisu ivoca.org. Pełny tekst licencji: <a href="https://ivoca.org/szyfr/vendor/openpgp-LICENSE.txt">openpgp-LICENSE.txt</a>.</li>
     </ol>
 
     <p class="back"><a href="./" class="button">Wróć do gry</a></p>
@@ -236,83 +289,51 @@ form.contact button:disabled { opacity: .6; cursor: default; }
     <a href="projekt.html">O projekcie</a> · <a href="projekt.html#regulamin">Regulamin</a> · <a href="projekt.html#prywatnosc">Polityka prywatności</a> · <a href="projekt.html#kontakt">Kontakt</a> · <a href="https://ivoca.org">Zobacz inne</a>
   </footer>
 
-  <script>
-    (function () {
-      var form = document.getElementById('contact-form');
-      var err = document.getElementById('contact-error');
-      var ok = document.getElementById('contact-ok');
-      var MAIL = ['ivoca', 'ivoca.org'].join('@'); // składany z części — w HTML adres ukrywa Cloudflare
-      var FALLBACK = 'Nie udało się wysłać wiadomości. Spróbuj później albo napisz na ' + MAIL + '.';
-      var API = 'https://powiadom.ivoca.pl/v1/contact';
-      var chan = document.getElementById('contact-channel');
-      var chanText = document.getElementById('contact-channel-text');
-      var CHANNEL = {
-        xmpp: ['up', 'Serwer XMPP działa — wiadomość wyślemy przez sieć XMPP.'],
-        mail: ['down', 'Serwer XMPP jest teraz niedostępny — wiadomość wyślemy e-mailem.'],
-        later: ['down', 'Serwer XMPP jest teraz niedostępny — wiadomość wyślemy, gdy znów zacznie działać.'],
-        unknown: ['', 'Nie udało się sprawdzić serwera XMPP. Jeśli wysyłanie się nie uda, napisz na ' + MAIL + '.']
-      };
-      var SENT = {
-        xmpp: 'Dziękujemy, wiadomość została wysłana przez sieć XMPP.',
-        mail: 'Dziękujemy, wiadomość zostanie wysłana e-mailem.',
-        later: 'Dziękujemy, wiadomość zostanie wysłana, gdy serwer XMPP znów zacznie działać.'
-      };
-      var checkedAt = 0;
-      function showChannel(via) {
-        var c = CHANNEL[via] || CHANNEL.unknown;
-        chan.className = 'channel' + (c[0] ? ' ' + c[0] : '');
-        chanText.textContent = c[1];
-      }
-      async function checkChannel() {
-        if (Date.now() - checkedAt < 60000) return;
-        checkedAt = Date.now();
-        try {
-          var res = await fetch(API + '/status', { cache: 'no-store' });
-          var data = await res.json();
-          showChannel(res.ok && data.ok ? data.via : 'unknown');
-        } catch (_) {
-          showChannel('unknown');
-        }
-      }
-      // Sprawdzamy dopiero, gdy formularz jest na ekranie, i odświeżamy przy pisaniu (najwyżej raz na minutę)
-      if ('IntersectionObserver' in window) {
-        var io = new IntersectionObserver(function (entries) {
-          if (entries.some(function (e) { return e.isIntersecting; })) { io.disconnect(); checkChannel(); }
+  <script type="module">
+    // Formularz kontaktowy: treść szyfrowana w przeglądarce (OpenPGP, ivoca.org/szyfr/poczta.js) i wysyłana zaszyfrowaną pocztą
+    import { wyslij } from 'https://ivoca.org/szyfr/poczta.js?v=3';
+    const form = document.getElementById('contact-form');
+    const err = document.getElementById('contact-error');
+    const ok = document.getElementById('contact-ok');
+    const btn = form.querySelector('button');
+    // adres składany z części — w HTML adresy ukrywa Cloudflare (Email Address Obfuscation), w skryptach nie
+    const MAIL = ['ivoca', 'ivoca.org'].join('@');
+    btn.disabled = false;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.textContent = '';
+      ok.hidden = true;
+      const tekst = form.message.value.trim();
+      const email = form.email.value.trim();
+      if (tekst.length < 5) { err.textContent = 'Wiadomość musi mieć co najmniej 5 znaków.'; return; }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Podaj poprawny adres e-mail albo zostaw pole puste.'; return; }
+      btn.disabled = true;
+      try {
+        await wyslij({
+          zrodlo: 'sudoku',
+          temat: 'Kontakt z gry Sudoku' + (form.name.value.trim() ? ' — ' + form.name.value.trim() : ''),
+          tresc: 'Wiadomość z formularza kontaktowego gry Sudoku (' + location.host + ')\n'
+            + 'Wysłano: ' + new Date().toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' }) + '\n'
+            + 'Nick: ' + (form.name.value.trim() || '—') + '\n'
+            + 'E-mail do odpowiedzi: ' + (email || '— (bez odpowiedzi)') + '\n\n' + tekst + '\n',
+          website: form.website.value
         });
-        io.observe(form);
-      } else {
-        checkChannel();
+        form.reset();
+        ok.hidden = false;
+      } catch (x) {
+        err.textContent = (x && x.message && !(x instanceof TypeError)) ? x.message : 'Nie udało się wysłać wiadomości. Spróbuj później albo napisz na ' + MAIL + '.';
+      } finally {
+        btn.disabled = false;
       }
-      form.addEventListener('focusin', checkChannel);
-      form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        var btn = form.querySelector('button');
-        err.textContent = '';
-        ok.hidden = true;
-        btn.disabled = true;
-        try {
-          var res = await fetch(API, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: form.name.value, email: form.email.value,
-              message: form.message.value, website: form.website.value
-            })
-          });
-          var data = {};
-          try { data = await res.json(); } catch (_) {}
-          if (!res.ok || !data.ok) throw new Error(data.error || FALLBACK);
-          form.reset();
-          ok.textContent = SENT[data.via] || 'Dziękujemy, wiadomość została wysłana.';
-          ok.hidden = false;
-          if (data.via) { showChannel(data.via); checkedAt = Date.now(); }
-        } catch (x) {
-          err.textContent = x instanceof TypeError ? FALLBACK : x.message;
-        } finally {
-          btn.disabled = false;
-        }
-      });
-    })();
+    });
   </script>
+  <script>
+    document.getElementById('btn-theme').addEventListener('click', function () {
+      var dark = document.documentElement.classList.toggle('dark');
+      try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) {}
+      document.getElementById('theme-color').setAttribute('content', dark ? '#0f172a' : '#f8fafc');
+    });
+  </script>
+  <script src="js/wyglad.js" defer></script>
 </body>
 </html>

@@ -3,20 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/favicon.ico" sizes="32x32">
+    <meta name="theme-color" id="theme-color" content="#f8fafc">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
     <link rel="icon" href="/img/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
     <title>Sudoku dla Każdego</title>
+    <meta name="description" content="Bezpłatne Sudoku w przeglądarce: cztery poziomy trudności, ołówek, podpowiedzi i wyzwanie dnia z rankingiem. Działa też bez internetu.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Sudoku">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <script>
+    // Motyw, czcionka i rozmiar tekstu przed wyrenderowaniem strony (te same klucze co na ivoca.org)
+    (function () {
+        var d = document.documentElement, t = null, f = null, s = null;
+        try { t = localStorage.getItem('theme'); f = localStorage.getItem('font'); s = localStorage.getItem('textSize'); } catch (e) {}
+        if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) d.classList.add('dark');
+        if (f === 'wyrazna') d.setAttribute('data-font', 'wyrazna');
+        if (s === 'wiekszy' || s === 'najwiekszy') d.setAttribute('data-size', s);
+        var m = document.getElementById('theme-color');
+        if (m && d.classList.contains('dark')) m.setAttribute('content', '#0f172a');
+    })();
+    </script>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
     <!-- Canvas Confetti -->
     <script src="vendor/confetti.browser.js"></script>
     <link rel="stylesheet" href="fonts/fonts.css">
     <style>
+        /* Czcionka „Wyraźna” (okienko „Aa”, js/wyglad.js); +6%, bo ma niższe małe litery */
+        @font-face { font-family: 'Atkinson Hyperlegible Next'; font-weight: 200 800; font-display: swap; src: url('/fonts/atkinson-hyperlegible-next-latin-ext-wght-normal.woff2') format('woff2');
+            unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+        @font-face { font-family: 'Atkinson Hyperlegible Next'; font-weight: 200 800; font-display: swap; src: url('/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2') format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+        :root {
+            --bg: #f8fafc; --card: #fff; --ink: #1e293b; --soft: #475569; --line: #e2e8f0;
+            --accent: #2563eb; --accent-ink: #fff; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --brand-text: #1d4ed8;
+            --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+            --txt: 1; --fadj: 1; --hover: color-mix(in srgb, var(--line) 50%, transparent);
+            color-scheme: light;
+        }
+        html.dark {
+            --bg: #0f172a; --card: #1e293b; --ink: #f1f5f9; --soft: #cbd5e1; --line: #334155;
+            --good: #34d399; --warn: #fbbf24; --bad: #f87171; --brand-text: #60a5fa;
+            color-scheme: dark;
+        }
+        html[data-font="wyrazna"] { --font: 'Atkinson Hyperlegible Next', system-ui, sans-serif; --fadj: 1.06; }
+        html[data-size="wiekszy"] { --txt: 1.125; }
+        html[data-size="najwiekszy"] { --txt: 1.25; }
+        html { font-size: calc(100% * var(--txt) * var(--fadj)); }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font);
             user-select: none;
             -webkit-user-select: none;
+        }
+        [hidden] { display: none !important; }
+
+        /* Pasek u góry */
+        .pasek { width: 100%; max-width: 64rem; margin: 0 auto; padding: 2px 12px; display: flex; justify-content: space-between; align-items: center; gap: 4px; min-height: 52px; border-bottom: 1px solid var(--line); }
+        .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.125rem; color: var(--ink); text-decoration: none; }
+        .brand img { display: block; width: 30px; height: 30px; }
+        .actions { display: flex; align-items: center; gap: 2px; }
+        .icon-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 0 8px; border: 0; border-radius: 12px; background: transparent; color: var(--soft); cursor: pointer; }
+        .icon-btn:hover { background: var(--hover); color: var(--ink); }
+        .icon-btn svg { width: 1.25rem; height: 1.25rem; flex: none; }
+        #installBtn .txt { display: none; }
+        @media (min-width: 520px) { #installBtn .txt { display: inline; } }
+        @media (max-width: 359px) { .brand span { display: none; } }
+        .wyglad { position: relative; }
+        .sun { display: none; color: #fbbf24; }
+        html.dark .sun { display: block; }
+        html.dark .moon { display: none; }
+        .install-tip { width: 100%; max-width: 28rem; margin: 8px auto 0; padding: 8px 12px; border-radius: 12px; background: var(--line); color: var(--ink); font-size: .875rem; }
+
+        /* Plansza: mieści się na jednym ekranie razem z resztą widoku */
+        .plansza-ramka { width: min(100%, max(17rem, calc(100vh - 20rem))); }
+        @supports (height: 100dvh) { .plansza-ramka { width: min(100%, max(17rem, calc(100dvh - 20rem))); } }
+        .cell-zla { text-decoration: underline 2px; text-underline-offset: 2px; }
+
+        /* Fokus i linki jak na ivoca.org */
+        button:focus-visible, a:focus-visible, select:focus-visible, summary:focus-visible, input:focus-visible { outline: 2px solid var(--brand-text); outline-offset: 2px; }
+        .sudoku-cell:focus-visible { outline: 3px solid var(--brand-text); outline-offset: -3px; z-index: 30; }
+        .site-footer a { color: var(--brand-text); font-weight: 500; text-decoration: underline 2px transparent; text-underline-offset: .25em; transition: text-decoration-color .15s; }
+        .site-footer a:hover, .site-footer a:focus-visible { text-decoration-color: currentColor; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
         }
 
         /* Stylizacja grubszych linii 3x3 w planszy Sudoku */
@@ -42,7 +115,10 @@
 
         /* Klawisze cyfr: ile jeszcze brakuje danej cyfry; komplet = klawisz wyszarzony i nieaktywny */
         .btn-numpad { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
-        .btn-numpad .cnt { font-size: 0.7rem; font-weight: 600; opacity: 0.65; }
+        .btn-numpad .cnt { font-size: 0.7rem; font-weight: 600; color: var(--soft); }
+        .btn-numpad:hover .cnt { color: inherit; }
+        /* liczniki i notatki z atrybutu data-n: treść jest w opisie dla czytnika, nie jako osobny tekst przycisku */
+        .btn-numpad .cnt::before, .pencil-num::before { content: attr(data-n); }
         .btn-numpad:disabled { opacity: 0.35; cursor: default; pointer-events: none; box-shadow: none; }
         .btn-numpad:disabled .cnt { visibility: hidden; }
 
@@ -79,52 +155,41 @@ function ivocaStat(event, won, dane) {
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">
 
-    <!-- Nawigacja / Nagłówek -->
-    <header class="w-full max-w-5xl mx-auto px-4 py-3 flex justify-between items-center border-b border-slate-200 dark:border-slate-800">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-brand-600 text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-brand-500/30">
-                S
-            </div>
-            <h1 class="text-xl md:text-2xl font-bold tracking-tight bg-gradient-to-r from-brand-600 to-indigo-600 bg-clip-text text-transparent">
-                Sudoku dla Każdego
-            </h1>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <button id="btn-stats" title="Statystyki" class="p-2.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-300">
-                <i class="fa-solid fa-chart-column text-lg"></i>
-            </button>
-            <button id="btn-rules" title="Zasady gry" class="p-2.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-300">
-                <i class="fa-solid fa-circle-question text-lg"></i>
-            </button>
-            <button id="btn-theme" title="Zmień motyw" class="p-2.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-300">
-                <i class="fa-solid fa-moon text-lg dark:hidden"></i>
-                <i class="fa-solid fa-sun text-lg hidden dark:block text-amber-400"></i>
-            </button>
+    <!-- Pasek u góry -->
+    <header class="pasek">
+        <a class="brand" href="./"><img src="/img/icon.svg" alt="" width="30" height="30"><span>Sudoku</span></a>
+        <div class="actions">
+            <button class="icon-btn" id="installBtn" type="button" title="Zainstaluj Sudoku jak aplikację" aria-label="Zainstaluj" aria-controls="install-tip" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="txt">Zainstaluj</span></button>
+            <button class="icon-btn" id="btn-stats" type="button" title="Statystyki" aria-label="Statystyki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-7M12 20V4M19 20v-10"/></svg></button>
+            <button class="icon-btn" id="btn-rules" type="button" title="Zasady gry" aria-label="Zasady gry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .8c0 1.8-2.5 2.2-2.5 3.8"/><path d="M12 17.2h.01"/></svg></button>
+            <div class="wyglad"><button class="wyglad-btn" id="btn-wyglad" type="button" data-font-opis="Inter" aria-expanded="false" aria-controls="wyglad-panel" title="Czcionka i rozmiar tekstu" aria-label="Aa – czcionka i rozmiar tekstu" hidden>A<small>a</small></button></div>
+            <button class="icon-btn" id="btn-theme" type="button" title="Zmień motyw" aria-label="Zmień motyw"><svg class="moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor" stroke="none"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
         </div>
     </header>
+    <p class="install-tip" id="install-tip" role="status" hidden>Aby dodać Sudoku do ekranu iPhone’a lub iPada: w Safari stuknij <strong>Udostępnij</strong> (kwadrat ze strzałką), a potem <strong>Do ekranu początkowego</strong>.</p>
 
     <!-- Główna zawartość -->
-    <main class="flex-1 max-w-5xl w-full mx-auto p-4 flex flex-col items-center justify-start gap-4">
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-2 flex flex-col items-center justify-start gap-2">
+        <h1 class="sr-only">Sudoku dla Każdego</h1>
 
         <!-- Wyzwanie dnia: ta sama plansza dla wszystkich, czas liczy serwer, ranking publiczny -->
-        <div id="daily-card" class="w-full max-w-md flex items-center gap-3 bg-white dark:bg-slate-800 p-3 rounded-2xl shadow-sm border border-brand-500/60">
-            <div class="w-9 h-9 rounded-xl bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-500 flex items-center justify-center flex-none">
-                <i class="fa-solid fa-calendar-day"></i>
+        <div id="daily-card" class="w-full max-w-md flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-2xl shadow-sm border border-brand-500/60">
+            <div class="w-8 h-8 rounded-xl bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-400 flex items-center justify-center flex-none" aria-hidden="true">
+                <i aria-hidden="true" class="fa-solid fa-calendar-day"></i>
             </div>
             <div class="flex-1 min-w-0">
                 <div class="font-bold text-sm text-slate-800 dark:text-slate-100">Wyzwanie dnia</div>
-                <div id="daily-info" class="text-xs text-slate-500 dark:text-slate-400">Ta sama plansza dla wszystkich</div>
+                <div id="daily-info" class="text-xs text-slate-600 dark:text-slate-300">Ta sama plansza dla wszystkich</div>
             </div>
-            <a href="ranking" class="text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition">Ranking</a>
-            <button id="btn-daily" class="bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl shadow transition active:scale-95 disabled:opacity-50">Graj</button>
+            <a href="ranking" class="inline-flex items-center min-h-[2.75rem] text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition">Ranking</a>
+            <button id="btn-daily" class="min-h-[2.75rem] bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl shadow transition active:scale-95 disabled:opacity-50">Graj</button>
         </div>
 
         <!-- Panel Kontrolny Gry: Trudność, Czas, Błędy -->
-        <div class="w-full max-w-md flex items-center justify-between gap-2 bg-white dark:bg-slate-800 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="w-full max-w-md flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <!-- Wybór Poziomu -->
-            <span id="daily-badge" class="hidden text-sm font-semibold text-brand-600 dark:text-brand-500 px-1">Wyzwanie dnia</span>
-            <select id="select-difficulty" class="bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 text-sm font-semibold rounded-xl px-3 py-2 outline-none cursor-pointer border border-transparent focus:border-brand-500">
+            <span id="daily-badge" class="hidden text-sm font-semibold text-brand-700 dark:text-brand-400 px-1">Wyzwanie dnia</span>
+            <select id="select-difficulty" aria-label="Poziom trudności" class="min-h-[2.75rem] bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 text-sm font-semibold rounded-xl px-2 py-2 cursor-pointer border border-transparent">
                 <option value="easy">Łatwy</option>
                 <option value="medium" selected>Średni</option>
                 <option value="hard">Trudny</option>
@@ -132,44 +197,44 @@ function ivocaStat(event, won, dane) {
             </select>
 
             <!-- Statystyki na żywo: Czas i Błędy -->
-            <div class="flex items-center gap-4 text-sm font-medium">
-                <div class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                    <i class="fa-regular fa-clock text-brand-500"></i>
-                    <span id="timer-text">00:00</span>
-                    <button id="btn-pause" class="ml-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                        <i class="fa-solid fa-pause text-xs" id="pause-icon"></i>
+            <div class="flex items-center gap-2 text-sm font-medium">
+                <div class="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                    <i aria-hidden="true" class="fa-regular fa-clock text-brand-500"></i>
+                    <span class="sr-only">Czas: </span><span id="timer-text">00:00</span>
+                    <button id="btn-pause" type="button" title="Wstrzymaj grę" aria-label="Wstrzymaj grę" aria-pressed="false" class="min-w-[2.25rem] min-h-[2.75rem] rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                        <i aria-hidden="true" class="fa-solid fa-pause text-xs" id="pause-icon"></i>
                     </button>
                 </div>
                 <div id="mistakes-box" class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                    <i class="fa-solid fa-xmark text-red-500"></i>
-                    <span>Błędy: <strong id="mistakes-count" class="text-slate-800 dark:text-slate-100">0/3</strong></span>
+                    <i aria-hidden="true" class="fa-solid fa-xmark text-red-500"></i>
+                    <span><span class="sr-only">Błędy: </span><strong id="mistakes-count" class="text-slate-800 dark:text-slate-100">0/3</strong></span>
                 </div>
             </div>
 
-            <button id="btn-new-game" class="bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl shadow transition active:scale-95">
+            <button id="btn-new-game" class="min-h-[2.75rem] whitespace-nowrap bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl shadow transition active:scale-95">
                 Nowa gra
             </button>
         </div>
 
         <!-- Główny Kontener Planszy i Akcji -->
-        <div class="w-full max-w-md flex flex-col items-center gap-4">
+        <div class="w-full max-w-md flex flex-col items-center gap-2">
 
             <!-- Plansza Sudoku -->
-            <div class="relative w-full aspect-square bg-slate-300 dark:bg-slate-700 p-1 rounded-2xl shadow-xl border-2 border-slate-300 dark:border-slate-700 overflow-hidden">
-                <div id="sudoku-board" class="sudoku-grid w-full h-full bg-slate-200 dark:bg-slate-800 gap-[1px] rounded-xl overflow-hidden">
+            <div class="plansza-ramka relative aspect-square bg-slate-300 dark:bg-slate-700 p-1 rounded-2xl shadow-xl border-2 border-slate-300 dark:border-slate-700 overflow-hidden">
+                <div id="sudoku-board" role="group" aria-label="Plansza Sudoku, 9 wierszy i 9 kolumn. Strzałki przenoszą między polami, cyfry 1–9 wpisują wartość." class="sudoku-grid w-full h-full bg-slate-200 dark:bg-slate-800 gap-[1px] rounded-xl overflow-hidden">
                     <!-- Komórki generowane dynamicznie przez JS -->
                 </div>
 
                 <!-- Odliczanie przed wyzwaniem dnia (plansza ukryta, czas jeszcze nie biegnie) -->
-                <div id="countdown-overlay" class="absolute inset-0 bg-white dark:bg-slate-900 flex flex-col items-center justify-center gap-2 hidden z-30 rounded-2xl" role="timer" aria-live="assertive">
+                <div id="countdown-overlay" class="absolute inset-0 bg-white dark:bg-slate-900 flex flex-col items-center justify-center gap-2 hidden z-30 rounded-2xl" role="timer" aria-live="polite">
                     <p class="text-slate-600 dark:text-slate-300 font-semibold">Wyzwanie dnia zaczyna się za</p>
                     <span id="countdown-num" class="text-8xl font-extrabold text-red-600 dark:text-red-500 tabular-nums leading-none">5</span>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Czas zacznie biec po odliczaniu</p>
+                    <p class="text-xs text-slate-600 dark:text-slate-300">Czas zacznie biec po odliczaniu</p>
                 </div>
 
                 <!-- Nakładka Pauzy -->
                 <div id="pause-overlay" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 hidden z-20 rounded-2xl">
-                    <i class="fa-solid fa-circle-play text-5xl text-brand-500"></i>
+                    <i aria-hidden="true" class="fa-solid fa-circle-play text-5xl text-brand-500"></i>
                     <p class="text-white font-semibold text-lg">Gra jest wstrzymana</p>
                     <button id="btn-resume" class="px-6 py-2.5 bg-brand-600 text-white font-medium rounded-xl shadow-lg hover:bg-brand-700 transition">
                         Wznowij
@@ -179,70 +244,74 @@ function ivocaStat(event, won, dane) {
 
             <!-- Przyciski Narzędziowe (Undo, Redo, Eraser, Pencil, Hint) -->
             <div class="grid grid-cols-5 gap-2 w-full">
-                <button id="btn-undo" class="flex flex-col items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition active:scale-95">
-                    <i class="fa-solid fa-rotate-left text-lg mb-1"></i>
-                    <span class="text-[10px] font-medium">Cofnij</span>
+                <button id="btn-undo" class="min-h-[2.75rem] flex flex-col items-center justify-center px-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition active:scale-95">
+                    <i aria-hidden="true" class="fa-solid fa-rotate-left text-base mb-0.5"></i>
+                    <span class="text-[.625rem] font-medium">Cofnij</span>
                 </button>
-                <button id="btn-redo" class="flex flex-col items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition active:scale-95">
-                    <i class="fa-solid fa-rotate-right text-lg mb-1"></i>
-                    <span class="text-[10px] font-medium">Ponów</span>
+                <button id="btn-redo" class="min-h-[2.75rem] flex flex-col items-center justify-center px-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition active:scale-95">
+                    <i aria-hidden="true" class="fa-solid fa-rotate-right text-base mb-0.5"></i>
+                    <span class="text-[.625rem] font-medium">Ponów</span>
                 </button>
-                <button id="btn-erase" class="flex flex-col items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition active:scale-95">
-                    <i class="fa-solid fa-eraser text-lg mb-1"></i>
-                    <span class="text-[10px] font-medium">Gumka</span>
+                <button id="btn-erase" class="min-h-[2.75rem] flex flex-col items-center justify-center px-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition active:scale-95">
+                    <i aria-hidden="true" class="fa-solid fa-eraser text-base mb-0.5"></i>
+                    <span class="text-[.625rem] font-medium">Gumka</span>
                 </button>
-                <button id="btn-pencil" class="relative flex flex-col items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition active:scale-95">
-                    <i class="fa-solid fa-pencil text-lg mb-1"></i>
-                    <span class="text-[10px] font-medium">Ołówek</span>
+                <button id="btn-pencil" aria-pressed="false" class="min-h-[2.75rem] relative flex flex-col items-center justify-center px-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition active:scale-95">
+                    <i aria-hidden="true" class="fa-solid fa-pencil text-base mb-0.5"></i>
+                    <span class="text-[.625rem] font-medium">Ołówek</span>
                     <span id="pencil-badge" class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-slate-400"></span>
                 </button>
-                <button id="btn-hint" class="flex flex-col items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-amber-500 transition active:scale-95">
-                    <i class="fa-solid fa-lightbulb text-lg mb-1"></i>
-                    <span class="text-[10px] font-medium">Podpowiedź</span>
+                <button id="btn-hint" class="min-h-[2.75rem] flex flex-col items-center justify-center px-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-amber-700 dark:text-amber-400 transition active:scale-95">
+                    <i aria-hidden="true" class="fa-solid fa-lightbulb text-base mb-0.5"></i>
+                    <span class="text-[.625rem] font-medium">Podpowiedź</span>
                 </button>
             </div>
 
             <!-- Ekranowa Klawiatura Numeryczna (1-9) -->
             <div class="grid grid-cols-9 gap-1.5 w-full">
                 <!-- Generowane pętlą w JS lub statycznie dla lepszej kontroli -->
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="1" aria-label="1"><span>1</span><span class="cnt" aria-hidden="true">9</span></button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="2" aria-label="2"><span>2</span><span class="cnt" aria-hidden="true">9</span></button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="3" aria-label="3"><span>3</span><span class="cnt" aria-hidden="true">9</span></button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="4" aria-label="4"><span>4</span><span class="cnt" aria-hidden="true">9</span></button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="5" aria-label="5"><span>5</span><span class="cnt" aria-hidden="true">9</span></button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="6" aria-label="6"><span>6</span><span class="cnt" aria-hidden="true">9</span></button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="7" aria-label="7"><span>7</span><span class="cnt" aria-hidden="true">9</span></button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="8" aria-label="8"><span>8</span><span class="cnt" aria-hidden="true">9</span></button>
-                <button class="btn-numpad aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="9" aria-label="9"><span>9</span><span class="cnt" aria-hidden="true">9</span></button>
+                <button class="btn-numpad min-h-[2.75rem] aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="1" aria-label="1"><span>1</span><span class="cnt" aria-hidden="true" data-n="9"></span></button>
+                <button class="btn-numpad min-h-[2.75rem] aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="2" aria-label="2"><span>2</span><span class="cnt" aria-hidden="true" data-n="9"></span></button>
+                <button class="btn-numpad min-h-[2.75rem] aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="3" aria-label="3"><span>3</span><span class="cnt" aria-hidden="true" data-n="9"></span></button>
+                <button class="btn-numpad min-h-[2.75rem] aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="4" aria-label="4"><span>4</span><span class="cnt" aria-hidden="true" data-n="9"></span></button>
+                <button class="btn-numpad min-h-[2.75rem] aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="5" aria-label="5"><span>5</span><span class="cnt" aria-hidden="true" data-n="9"></span></button>
+                <button class="btn-numpad min-h-[2.75rem] aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="6" aria-label="6"><span>6</span><span class="cnt" aria-hidden="true" data-n="9"></span></button>
+                <button class="btn-numpad min-h-[2.75rem] aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="7" aria-label="7"><span>7</span><span class="cnt" aria-hidden="true" data-n="9"></span></button>
+                <button class="btn-numpad min-h-[2.75rem] aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="8" aria-label="8"><span>8</span><span class="cnt" aria-hidden="true" data-n="9"></span></button>
+                <button class="btn-numpad min-h-[2.75rem] aspect-[4/5] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-bold text-slate-800 dark:text-slate-100 hover:bg-brand-500 hover:text-white dark:hover:bg-brand-600 transition active:scale-95 shadow-sm" data-val="9" aria-label="9"><span>9</span><span class="cnt" aria-hidden="true" data-n="9"></span></button>
             </div>
 
-            <!-- Opcjonalne ustawienia szybkie -->
-            <div class="flex items-center justify-between w-full px-1 text-xs text-slate-500 dark:text-slate-400">
-                <label class="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" id="toggle-auto-check" checked class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
-                    <span>Automatyczna weryfikacja błędów</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" id="toggle-highlight-same" checked class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
-                    <span>Podświetlaj powiązane cyfry</span>
-                </label>
-            </div>
+            <!-- Opcje rzadko zmieniane -->
+            <details class="w-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm">
+                <summary class="px-4 py-3 font-semibold cursor-pointer rounded-2xl">Ustawienia</summary>
+                <div class="flex flex-col gap-3 px-4 pb-3 text-slate-600 dark:text-slate-300">
+                    <label class="flex items-center gap-2 cursor-pointer select-none min-h-[2.75rem]">
+                        <input type="checkbox" id="toggle-auto-check" checked class="w-5 h-5 rounded border-slate-300 text-brand-600">
+                        <span>Automatyczna weryfikacja błędów</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer select-none min-h-[2.75rem]">
+                        <input type="checkbox" id="toggle-highlight-same" checked class="w-5 h-5 rounded border-slate-300 text-brand-600">
+                        <span>Podświetlaj powiązane cyfry</span>
+                    </label>
+                </div>
+            </details>
         </div>
+        <p class="sr-only" id="ogloszenie" role="status" aria-live="polite"></p>
     </main>
 
-    <footer class="text-center text-xs text-slate-500 dark:text-slate-400 px-4 pb-6 [&_a]:underline [&_a]:text-brand-600 dark:[&_a]:text-brand-400">
+    <footer class="site-footer text-center text-xs text-slate-600 dark:text-slate-300 px-4 pt-3 pb-6">
       <a href="projekt.html">O projekcie</a> · <a href="projekt.html#regulamin">Regulamin</a> · <a href="projekt.html#prywatnosc">Polityka prywatności</a> · <a href="projekt.html#kontakt">Kontakt</a> · <a href="https://ivoca.org">Zobacz inne</a>
     </footer>
 
     <!-- Modal Zasad / Instrukcji -->
-    <div id="modal-rules" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div id="modal-rules" role="dialog" aria-modal="true" aria-labelledby="tytul-zasady" class="okno fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[85vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-book-open text-brand-500"></i> Zasady gry w Sudoku
+                <h2 id="tytul-zasady" class="text-xl font-bold flex items-center gap-2">
+                    <i aria-hidden="true" class="fa-solid fa-book-open text-brand-500"></i> Zasady gry w Sudoku
                 </h2>
-                <button class="btn-close-modal text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl">
-                    <i class="fa-solid fa-xmark"></i>
+                <button type="button" aria-label="Zamknij" class="btn-close-modal min-w-[2.75rem] min-h-[2.75rem] rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xl">
+                    <i aria-hidden="true" class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             <div class="space-y-3 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -257,7 +326,7 @@ function ivocaStat(event, won, dane) {
                     <li><strong>Ołówek:</strong> Włącz tryb ołówka, aby zapisywać małe cyfry w komórkach, które mogą być potencjalnymi rozwiązaniami.</li>
                     <li><strong>Podpowiedź:</strong> Jeśli utkniesz, kliknij żarówkę, aby poznać poprawną cyfrę dla zaznaczonego pola.</li>
                     <li><strong>Wyzwanie dnia:</strong> codziennie ta sama plansza dla wszystkich. Zaczyna się po 5 sekundach odliczania, potem biegnie czas. Bez podpowiedzi. Każdą cyfrę sprawdza serwer: zła cyfra jest zaznaczona na czerwono i liczy się jako błąd, a 3 błędy kończą wyzwanie. Czas liczy serwer, a po ukończeniu możesz zapisać wynik na publicznej liście.</li>
-                    <li><strong>Klawiatura:</strong> Możesz grać używając klawiatury komputera – cyfry 1-9 wpisują wartość, Backspace/Delete usuwa, a strzałki pozwalają nawigować.</li>
+                    <li><strong>Klawiatura:</strong> Możesz grać samą klawiaturą: strzałki przenoszą między polami, cyfry 1–9 wpisują wartość, Backspace lub Delete usuwa, N włącza ołówek, Ctrl+Z cofa, a Ctrl+Y ponawia.</li>
                 </ul>
             </div>
             <button class="btn-close-modal w-full mt-6 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl shadow transition">
@@ -267,14 +336,14 @@ function ivocaStat(event, won, dane) {
     </div>
 
     <!-- Modal Statystyk -->
-    <div id="modal-stats" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div id="modal-stats" role="dialog" aria-modal="true" aria-labelledby="tytul-statystyki" class="okno fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-trophy text-amber-500"></i> Twoje Statystyki
+                <h2 id="tytul-statystyki" class="text-xl font-bold flex items-center gap-2">
+                    <i aria-hidden="true" class="fa-solid fa-trophy text-amber-500"></i> Twoje Statystyki
                 </h2>
-                <button class="btn-close-modal text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl">
-                    <i class="fa-solid fa-xmark"></i>
+                <button type="button" aria-label="Zamknij" class="btn-close-modal min-w-[2.75rem] min-h-[2.75rem] rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xl">
+                    <i aria-hidden="true" class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             
@@ -282,7 +351,7 @@ function ivocaStat(event, won, dane) {
                 <!-- Generowane dynamicznie w JS -->
             </div>
 
-            <button id="btn-reset-stats" class="w-full mt-4 text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 text-center py-1">
+            <button id="btn-reset-stats" class="w-full mt-4 min-h-[2.75rem] text-xs text-red-700 dark:text-red-300 hover:underline text-center py-1">
                 Resetuj statystyki
             </button>
             <button class="btn-close-modal w-full mt-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 font-semibold py-2.5 rounded-xl transition">
@@ -292,11 +361,11 @@ function ivocaStat(event, won, dane) {
     </div>
 
     <!-- Modal Wygranej / Przegranej -->
-    <div id="modal-gameover" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 hidden z-50">
+    <div id="modal-gameover" role="dialog" aria-modal="true" aria-labelledby="gameover-title" class="okno fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 text-center transform transition-all scale-95">
             <div id="gameover-icon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3"></div>
             <h2 id="gameover-title" class="text-2xl font-extrabold mb-1"></h2>
- <p id="gameover-desc" class="text-sm text-slate-500 dark:text-slate-400 mb-6"></p>
+ <p id="gameover-desc" class="text-sm text-slate-600 dark:text-slate-300 mb-6"></p>
             <div id="gameover-daily" class="hidden text-left bg-slate-100 dark:bg-slate-700/50 rounded-2xl p-4 mb-4 text-sm"></div>
             
             <button id="btn-modal-new-game" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-brand-500/30 transition active:scale-95">
@@ -409,6 +478,7 @@ function ivocaStat(event, won, dane) {
                 state.countdown = !d.koniec && zostalo > 0;
                 if (bylo && !state.countdown) { autoFillLast(); renderBoard(); saveDaily(); }   // koniec odliczania
                 overlay.classList.toggle('hidden', !state.countdown);
+                document.getElementById('sudoku-board').inert = state.countdown;
                 if (state.countdown) {
                     // odliczanie na czerwono; czas gry liczy serwer dopiero od jego końca
                     document.getElementById('countdown-num').innerText = Math.ceil(zostalo / 1000);
@@ -485,6 +555,7 @@ function ivocaStat(event, won, dane) {
                     if (r.poprawna && state.boardCurrent[row][col] === num) autoCleanNotes(row, col, num);
                     if (r.poprawna && !r.koniec) autoFillLast();
                     renderBoard();
+                    powiedz(opisPola(row, col));
                     saveDaily();
                     if (r.koniec) finishDaily(r);
                 }).catch(e => {
@@ -507,7 +578,7 @@ function ivocaStat(event, won, dane) {
             document.getElementById('timer-text').innerText = formatTime(state.timer);
             saveDaily();
             ivocaStat('finish', d.wygrana, { war: 'Wyzwanie dnia', czas: Math.round(d.czas / 1000) });
-            if (d.wygrana) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            if (d.wygrana) konfetti();
             showDailyEnd();
             updateDailyCard();
         }
@@ -519,12 +590,12 @@ function ivocaStat(event, won, dane) {
             const przegrana = d.wygrana === false;
             if (przegrana) {
                 icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400';
-                icon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                icon.innerHTML = '<i aria-hidden="true" class="fa-solid fa-xmark"></i>';
                 document.getElementById('gameover-title').innerText = 'Koniec wyzwania';
                 document.getElementById('gameover-desc').innerText = 'Trzy błędy — tym razem się nie udało. Jutro nowa plansza!';
             } else {
                 icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400';
-                icon.innerHTML = '<i class="fa-solid fa-calendar-check"></i>';
+                icon.innerHTML = '<i aria-hidden="true" class="fa-solid fa-calendar-check"></i>';
                 document.getElementById('gameover-title').innerText = 'Wyzwanie dnia ukończone!';
                 document.getElementById('gameover-desc').innerText = `Plansza z ${fmtDzien(d.dzien)} rozwiązana w czasie ${formatTime(Math.floor(d.czas / 1000))}, błędy: ${d.bledy || 0}.`;
             }
@@ -535,17 +606,17 @@ function ivocaStat(event, won, dane) {
             const p = (cls, text) => { const e = document.createElement('p'); e.className = cls; e.innerText = text; box.appendChild(e); return e; };
             const link = () => { const a = document.createElement('a'); a.href = 'ranking?dzien=' + d.dzien; a.className = 'block w-full text-center mt-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 font-semibold py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition'; a.innerText = 'Zobacz ranking'; box.appendChild(a); };
             if (przegrana) {
-                p('text-slate-500 dark:text-slate-400', 'Na listę trafiają tylko ukończone plansze.');
+                p('text-slate-600 dark:text-slate-300', 'Na listę trafiają tylko ukończone plansze.');
                 link();
             } else if (d.zapisano || sess.get('wyzwanie-zapisano') === d.dzien) {
                 p('font-semibold text-slate-800 dark:text-slate-100', d.zapisano || 'Twój dzisiejszy wynik jest już na liście.');
                 link();
             } else if (d.odrzucono) {
-                p('text-slate-500 dark:text-slate-400', 'Wynik nie został zapisany.');
+                p('text-slate-600 dark:text-slate-300', 'Wynik nie został zapisany.');
                 link();
             } else {
                 p('font-semibold text-slate-800 dark:text-slate-100 mb-1', 'Czy chcesz zapisać wynik na publicznie dostępnej liście i porównać wyniki z innymi graczami?');
-                p('text-xs text-slate-500 dark:text-slate-400', 'Na liście pojawi się tylko losowy identyfikator nadany przez serwer, czas i liczba błędów. Ta karta przeglądarki pamięta identyfikator do jej zamknięcia.');
+                p('text-xs text-slate-600 dark:text-slate-300', 'Na liście pojawi się tylko losowy identyfikator nadany przez serwer, czas i liczba błędów. Ta karta przeglądarki pamięta identyfikator do jej zamknięcia.');
                 const row = document.createElement('div'); row.className = 'grid grid-cols-2 gap-2 mt-3';
                 const no = document.createElement('button'); no.className = 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 font-semibold py-2.5 rounded-xl transition'; no.innerText = 'Nie, dziękuję';
                 const yes = document.createElement('button'); yes.className = 'bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl shadow transition disabled:opacity-50'; yes.innerText = 'Opublikuj wynik';
@@ -567,20 +638,90 @@ function ivocaStat(event, won, dane) {
                 });
                 row.appendChild(no); row.appendChild(yes); box.appendChild(row);
             }
-            modal.classList.remove('hidden');
+            otworzOkno('modal-gameover');
         }
 
+        // Pamięć przeglądarki: gra działa także bez localStorage
+        function czytaj(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+        function zapisz(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+        function usun(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
         // Statystyki
-        let stats = JSON.parse(localStorage.getItem('sudoku_stats')) || {
+        const pusteStaty = () => ({
             easy: { played: 0, won: 0, bestTime: null },
             medium: { played: 0, won: 0, bestTime: null },
             hard: { played: 0, won: 0, bestTime: null },
             expert: { played: 0, won: 0, bestTime: null }
-        };
+        });
+        let stats = Object.assign(pusteStaty(), czytaj('sudoku_stats') || {});
+
+        // Ustawienia (rzadko zmieniane): jeden klucz sudoku_opts
+        function wczytajOpcje() {
+            const o = czytaj('sudoku_opts') || {};
+            if (typeof o.autoCheck === 'boolean') state.autoCheck = o.autoCheck;
+            if (typeof o.highlightSame === 'boolean') state.highlightSame = o.highlightSame;
+            document.getElementById('toggle-auto-check').checked = state.autoCheck;
+            document.getElementById('toggle-highlight-same').checked = state.highlightSame;
+        }
+        function zapiszOpcje() { zapisz('sudoku_opts', { autoCheck: state.autoCheck, highlightSame: state.highlightSame }); }
+
+        // Rozpoczęta zwykła gra: po powrocie do aplikacji czeka na gracza (wyzwanie dnia ma własny zapis)
+        function zapiszGre() {
+            if (state.daily || state.isGameOver || !state.boardSolution || !state.boardSolution.length) return;
+            zapisz('sudoku-gra', {
+                poziom: state.difficulty, rozwiazanie: state.boardSolution, start: state.boardInitial, teraz: state.boardCurrent,
+                notatki: state.boardNotes.map(w => w.map(s => [...s])), bledy: state.mistakes, czas: state.timer
+            });
+        }
+        function wczytajGre() {
+            const z = czytaj('sudoku-gra');
+            const siatka = a => Array.isArray(a) && a.length === 9 && a.every(w => Array.isArray(w) && w.length === 9);
+            if (!z || !siatka(z.rozwiazanie) || !siatka(z.start) || !siatka(z.teraz) || !siatka(z.notatki)) return false;
+            if (!['easy', 'medium', 'hard', 'expert'].includes(z.poziom)) return false;
+            zwyklaGraUI();
+            document.getElementById('select-difficulty').value = z.poziom;
+            state.difficulty = z.poziom;
+            state.boardSolution = z.rozwiazanie;
+            state.boardInitial = z.start;
+            state.boardCurrent = z.teraz;
+            state.boardNotes = z.notatki.map(w => w.map(s => new Set(s)));
+            state.selectedCell = null;
+            state.mistakes = +z.bledy || 0;
+            state.history = [];
+            state.redoStack = [];
+            state.isGameOver = false;
+            document.getElementById('mistakes-count').innerText = `${state.mistakes}/${state.maxMistakes}`;
+            resetTimer();
+            state.timer = +z.czas || 0;
+            document.getElementById('timer-text').innerText = formatTime(state.timer);
+            startTimer();
+            renderBoard();
+            return true;
+        }
+
+        // Okna: fokus w oknie, reszta strony wyłączona (inert), Escape zamyka, fokus wraca tam, skąd otwarto
+        let fokusPrzedOknem = null;
+        const TLO = 'body > header, body > main, body > footer, #install-tip';
+        function otworzOkno(id) {
+            const m = document.getElementById(id);
+            if (m.classList.contains('hidden')) {
+                fokusPrzedOknem = document.activeElement;
+                m.classList.remove('hidden');
+                document.querySelectorAll(TLO).forEach(x => { x.inert = true; });
+            }
+            const f = m.querySelector('#gameover-daily:not(.hidden) button:not(:disabled), #gameover-daily:not(.hidden) a, .btn-close-modal, #btn-modal-new-game');
+            if (f) f.focus();
+        }
+        function zamknijOkna() {
+            document.querySelectorAll('.okno').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll(TLO).forEach(x => { x.inert = false; });
+            const f = fokusPrzedOknem; fokusPrzedOknem = null;
+            if (f && document.contains(f) && !f.disabled && f !== document.body) f.focus();
+        }
 
         // Inicjalizacja DOM
         document.addEventListener('DOMContentLoaded', () => {
-            initTheme();
+            wczytajOpcje();
             initBoardUI();
             bindEvents();
             // link z ivoca.org: sudoku.ivoca.org/?wyzwanie od razu otwiera wyzwanie dnia
@@ -588,21 +729,14 @@ function ivocaStat(event, won, dane) {
                 // karta otwarta w tle nie zaczyna wyzwania, dopóki nie stanie się widoczna
                 const go = () => { if (!document.hidden) { document.removeEventListener('visibilitychange', go); startDaily(); } };
                 if (!document.hidden) startDaily(); else document.addEventListener('visibilitychange', go);
-            } else startNewGame();
+            } else if (!wczytajGre()) startNewGame();
         });
 
-        // Motyw Ciemny / Jasny
-        function initTheme() {
-            if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        }
-
+        // Motyw ciemny / jasny (ustawiany skryptem w <head>, ten sam klucz co na ivoca.org)
         document.getElementById('btn-theme').addEventListener('click', () => {
             const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (e) {}
+            document.getElementById('theme-color').setAttribute('content', isDark ? '#0f172a' : '#f8fafc');
         });
 
         // Tworzenie Siatki Planszy w DOM
@@ -612,7 +746,9 @@ function ivocaStat(event, won, dane) {
 
             for (let r = 0; r < 9; r++) {
                 for (let c = 0; c < 9; c++) {
-                    const cell = document.createElement('div');
+                    const cell = document.createElement('button');
+                    cell.type = 'button';
+                    cell.tabIndex = r === 0 && c === 0 ? 0 : -1;
                     cell.className = `sudoku-cell relative flex items-center justify-center font-semibold text-lg md:text-xl cursor-pointer bg-white dark:bg-slate-800 transition-colors duration-100 border-r border-b border-slate-200 dark:border-slate-700/60`;
                     
                     // Pogrubienie linii bloków 3x3
@@ -628,16 +764,18 @@ function ivocaStat(event, won, dane) {
                     cell.appendChild(valSpan);
 
                     // Kontener na notatki Ołówka (3x3 grid)
-                    const pencilGrid = document.createElement('div');
-                    pencilGrid.className = 'pencil-grid absolute inset-0 p-0.5 text-[9px] md:text-[11px] leading-none font-normal text-slate-500 dark:text-slate-400 pointer-events-none hidden';
+                    const pencilGrid = document.createElement('span');
+                    pencilGrid.className = 'pencil-grid absolute inset-0 p-0.5 text-[.5625rem] md:text-[.6875rem] leading-none font-normal text-slate-600 dark:text-slate-300 pointer-events-none hidden';
                     for (let i = 1; i <= 9; i++) {
-                        const pNum = document.createElement('div');
-                        pNum.className = `pencil-num-${i} flex items-center justify-center`;
+                        const pNum = document.createElement('span');
+                        pNum.className = `pencil-num pencil-num-${i} flex items-center justify-center`;
                         pencilGrid.appendChild(pNum);
                     }
                     cell.appendChild(pencilGrid);
 
                     cell.addEventListener('click', () => selectCell(r, c));
+                    // wejście na planszę Tabem wybiera pole z fokusem
+                    cell.addEventListener('focus', () => { if (!state.selectedCell || state.selectedCell.row !== r || state.selectedCell.col !== c) selectCell(r, c); });
                     boardEl.appendChild(cell);
                 }
             }
@@ -713,13 +851,19 @@ function ivocaStat(event, won, dane) {
 
         // --- OBSŁUGA STANU GRY & RENDEROWANIE ---
 
-        function startNewGame() {
+        function zwyklaGraUI() {
             if (state.daily) { saveDaily(); state.daily = null; }
+            if (state.isPaused) togglePause();
             state.countdown = false;
             document.getElementById('countdown-overlay').classList.add('hidden');
+            document.getElementById('sudoku-board').inert = false;
             setDailyUI(false);
             document.getElementById('gameover-daily').classList.add('hidden');
             document.getElementById('btn-modal-new-game').innerText = 'Zagraj ponownie';
+        }
+
+        function startNewGame() {
+            zwyklaGraUI();
             state.difficulty = document.getElementById('select-difficulty').value;
             ivocaStat('start', undefined, { war: getDifficultyName(state.difficulty) });
             const { puzzle, solution } = generateSudoku(state.difficulty);
@@ -759,9 +903,8 @@ function ivocaStat(event, won, dane) {
                     const isInitial = state.boardInitial[r][c] !== 0;
 
                     // Czyszczenie klas podświetleń
-                    cell.className = cell.className.replace(/bg-\S+/g, '');
-                    cell.classList.remove('text-brand-600', 'text-red-500', 'dark:text-brand-400', 'dark:text-red-400', 'font-bold');
-
+                    cell.className = cell.className.replace(/(^|\s)(dark:)?bg-\S+/g, ' ');
+                    
                     // Reset tła domyślnego
                     cell.classList.add('bg-white', 'dark:bg-slate-800');
 
@@ -802,12 +945,10 @@ function ivocaStat(event, won, dane) {
                             valSpan.className = 'cell-val z-10 font-bold text-slate-900 dark:text-slate-100';
                         } else {
                             // Sprawdzanie błędów (w wyzwaniu dnia: tylko powtórzenia — rozwiązania nie znamy)
-                            const ocena = state.daily && state.daily.oceny && state.daily.oceny[r * 9 + c];
-                            const isError = state.autoCheck && (state.daily ? !!(ocena && ocena.v === val && !ocena.ok) : val !== state.boardSolution[r][c]);
-                            if (isError) {
-                                valSpan.className = 'cell-val z-10 font-bold text-red-500 dark:text-red-400';
+                            if (czyBlad(r, c)) {
+                                valSpan.className = 'cell-val cell-zla z-10 font-bold text-red-700 dark:text-red-300';
                             } else {
-                                valSpan.className = 'cell-val z-10 font-medium text-brand-600 dark:text-brand-400';
+                                valSpan.className = 'cell-val z-10 font-medium text-brand-700 dark:text-brand-300';
                             }
                         }
                     } else {
@@ -820,16 +961,50 @@ function ivocaStat(event, won, dane) {
                             pencilGrid.classList.remove('hidden');
                             for (let i = 1; i <= 9; i++) {
                                 const pNum = pencilGrid.querySelector(`.pencil-num-${i}`);
-                                pNum.innerText = notes.has(i) ? i : '';
+                                pNum.dataset.n = notes.has(i) ? i : '';
                             }
                         } else {
                             pencilGrid.classList.add('hidden');
                         }
                     }
+
+                    // Czytnik ekranu i klawiatura: opis pola, jeden punkt wejścia Tabem (roving tabindex)
+                    const wybrane = !!state.selectedCell && state.selectedCell.row === r && state.selectedCell.col === c;
+                    cell.setAttribute('aria-label', opisPola(r, c));
+                    if (wybrane) cell.setAttribute('aria-current', 'true'); else cell.removeAttribute('aria-current');
+                    cell.tabIndex = (state.selectedCell ? wybrane : (r === 0 && c === 0)) ? 0 : -1;
                 }
             }
             updateNumpad();
+            zapiszGre();
         }
+
+        function czyBlad(r, c) {
+            const val = state.boardCurrent[r][c];
+            if (!val || !state.autoCheck || state.boardInitial[r][c] !== 0) return false;
+            if (state.daily) { const o = state.daily.oceny && state.daily.oceny[r * 9 + c]; return !!(o && o.v === val && !o.ok); }
+            return !!state.boardSolution && val !== state.boardSolution[r][c];
+        }
+
+        function opisPola(r, c) {
+            const val = state.boardCurrent[r][c];
+            let opis = `Wiersz ${r + 1}, kolumna ${c + 1}: `;
+            if (val) opis += val + (state.boardInitial[r][c] !== 0 ? ', stała' : czyBlad(r, c) ? ', błąd' : '');
+            else {
+                const n = state.boardNotes[r][c];
+                opis += n && n.size ? 'notatki ' + [...n].sort().join(', ') : 'puste';
+            }
+            return opis;
+        }
+
+        // Konfetti to dekoracja: bez ruchu przy prefers-reduced-motion, ukryte przed czytnikami ekranu
+        function konfetti() {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, disableForReducedMotion: true });
+            document.querySelectorAll('body > canvas').forEach(c => c.setAttribute('aria-hidden', 'true'));
+        }
+
+        function powiedz(tekst) { document.getElementById('ogloszenie').textContent = tekst; }
+        function poleEl(r, c) { return document.getElementById('sudoku-board').children[r * 9 + c]; }
 
         // Pewne cyfry na planszy: startowe i dobre (zwykła gra — zgodne z rozwiązaniem, wyzwanie — potwierdzone przez serwer)
         function isConfirmed(r, c) {
@@ -849,12 +1024,18 @@ function ivocaStat(event, won, dane) {
         // Na klawiszu: ile jeszcze brakuje danej cyfry; gdy komplet — klawisz wyszarzony i nieaktywny
         function updateNumpad() {
             const n = confirmedCounts();
+            const aktywny = document.activeElement;
             document.querySelectorAll('.btn-numpad').forEach(btn => {
                 const v = +btn.dataset.val, zostalo = Math.max(0, 9 - n[v]);
-                btn.querySelector('.cnt').textContent = zostalo;
+                btn.querySelector('.cnt').dataset.n = zostalo;
                 btn.disabled = zostalo === 0;
                 btn.setAttribute('aria-label', zostalo ? `${v}, zostało ${zostalo}` : `${v}, komplet`);
             });
+            // klawisz z fokusem zgasł (komplet cyfr): fokus na następny dostępny, żeby nie zgubić miejsca
+            if (aktywny && aktywny.classList && aktywny.classList.contains('btn-numpad') && aktywny.disabled) {
+                const nast = document.querySelector('.btn-numpad:not(:disabled)');
+                if (nast) nast.focus();
+            }
         }
 
         // Wiersze, kolumny i kwadraty 3×3 jako listy pól [r, c]
@@ -961,6 +1142,7 @@ function ivocaStat(event, won, dane) {
             }
 
             renderBoard();
+            powiedz(opisPola(row, col));
             if (state.daily) saveDaily();
             checkWinCondition();
         }
@@ -1076,21 +1258,22 @@ function ivocaStat(event, won, dane) {
                 }
                 
                 icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400';
-                icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+                icon.innerHTML = '<i aria-hidden="true" class="fa-solid fa-trophy"></i>';
                 title.innerText = 'Gratulacje! Wygrana!';
                 desc.innerText = `Rozwiązałeś Sudoku na poziomie (${getDifficultyName(state.difficulty)}) w czasie ${formatTime(state.timer)}.`;
                 
                 // Efekt Konfetti
-                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                konfetti();
             } else {
                 icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400';
-                icon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                icon.innerHTML = '<i aria-hidden="true" class="fa-solid fa-xmark"></i>';
                 title.innerText = 'Koniec Gry!';
                 desc.innerText = 'Popełniłeś 3 błędy. Spróbuj ponownie i poćwicz swoją koncentrację!';
             }
 
-            localStorage.setItem('sudoku_stats', JSON.stringify(stats));
-            modal.classList.remove('hidden');
+            zapisz('sudoku_stats', stats);
+            usun('sudoku-gra');
+            otworzOkno('modal-gameover');
         }
 
         // --- STOPER I ZARZĄDZANIE CZASEM ---
@@ -1101,6 +1284,7 @@ function ivocaStat(event, won, dane) {
                 if (!state.isPaused) {
                     state.timer++;
                     document.getElementById('timer-text').innerText = formatTime(state.timer);
+                    if (state.timer % 5 === 0) zapiszGre();
                 }
             }, 1000);
         }
@@ -1119,13 +1303,21 @@ function ivocaStat(event, won, dane) {
             state.isPaused = !state.isPaused;
             const pauseOverlay = document.getElementById('pause-overlay');
             const pauseIcon = document.getElementById('pause-icon');
+            const pauseBtn = document.getElementById('btn-pause');
+            const fokusWOknie = pauseOverlay.contains(document.activeElement);
 
+            document.getElementById('sudoku-board').inert = state.isPaused;
+            pauseBtn.setAttribute('aria-pressed', String(state.isPaused));
             if (state.isPaused) {
                 pauseOverlay.classList.remove('hidden');
                 pauseIcon.className = 'fa-solid fa-play text-xs';
+                document.getElementById('btn-resume').focus();
+                powiedz('Gra wstrzymana');
             } else {
                 pauseOverlay.classList.add('hidden');
                 pauseIcon.className = 'fa-solid fa-pause text-xs';
+                if (fokusWOknie) pauseBtn.focus();
+                powiedz('Gra wznowiona');
             }
         }
 
@@ -1153,7 +1345,19 @@ function ivocaStat(event, won, dane) {
 
             // Klawiatura fizyczna
             document.addEventListener('keydown', (e) => {
+                if (document.querySelector('.okno:not(.hidden)')) {
+                    if (e.key === 'Escape') zamknijOkna();
+                    return;
+                }
+                const panel = document.getElementById('wyglad-panel');
+                if (panel && !panel.hidden) return;
                 if (state.isGameOver || state.isPaused || state.countdown) return;
+                // pola formularza (poziom, ustawienia) obsługują klawisze same
+                if (e.target && e.target.closest && e.target.closest('select, input, textarea')) return;
+                const ctrl = e.ctrlKey || e.metaKey;
+                if (ctrl && e.key === 'z') { e.preventDefault(); undo(); return; }
+                if (ctrl && e.key === 'y') { e.preventDefault(); redo(); return; }
+                if (ctrl || e.altKey) return;
 
                 if (e.key >= '1' && e.key <= '9') {
                     handleInput(parseInt(e.key));
@@ -1161,11 +1365,8 @@ function ivocaStat(event, won, dane) {
                     handleInput(0);
                 } else if (e.key === 'n' || e.key === 'N') {
                     togglePencilMode();
-                } else if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
-                    undo();
-                } else if (e.key === 'y' && (e.ctrlKey || e.metaKey)) {
-                    redo();
                 } else if (e.key.startsWith('Arrow')) {
+                    e.preventDefault();
                     handleArrowNavigation(e.key);
                 }
             });
@@ -1186,43 +1387,40 @@ function ivocaStat(event, won, dane) {
             // Opcje szybkie
             document.getElementById('toggle-auto-check').addEventListener('change', (e) => {
                 state.autoCheck = e.target.checked;
+                zapiszOpcje();
                 renderBoard();
             });
             document.getElementById('toggle-highlight-same').addEventListener('change', (e) => {
                 state.highlightSame = e.target.checked;
+                zapiszOpcje();
                 renderBoard();
             });
 
             // Modale
             document.getElementById('btn-rules').addEventListener('click', () => {
-                document.getElementById('modal-rules').classList.remove('hidden');
+                otworzOkno('modal-rules');
             });
             document.getElementById('btn-stats').addEventListener('click', () => {
                 renderStatsModal();
-                document.getElementById('modal-stats').classList.remove('hidden');
+                otworzOkno('modal-stats');
             });
 
             document.querySelectorAll('.btn-close-modal').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.fixed').forEach(m => m.classList.add('hidden'));
-                });
+                btn.addEventListener('click', zamknijOkna);
             });
 
             document.getElementById('btn-daily').addEventListener('click', startDaily);
 
             document.getElementById('btn-modal-new-game').addEventListener('click', () => {
-                document.getElementById('modal-gameover').classList.add('hidden');
-                startNewGame();
+                const poWyzwaniu = !!state.daily;
+                zamknijOkna();
+                // po wyzwaniu dnia wracamy do rozpoczętej zwykłej gry, jeśli jakaś czeka
+                if (!(poWyzwaniu && wczytajGre())) startNewGame();
             });
 
             document.getElementById('btn-reset-stats').addEventListener('click', () => {
-                stats = {
-                    easy: { played: 0, won: 0, bestTime: null },
-                    medium: { played: 0, won: 0, bestTime: null },
-                    hard: { played: 0, won: 0, bestTime: null },
-                    expert: { played: 0, won: 0, bestTime: null }
-                };
-                localStorage.setItem('sudoku_stats', JSON.stringify(stats));
+                stats = pusteStaty();
+                zapisz('sudoku_stats', stats);
                 renderStatsModal();
             });
         }
@@ -1232,11 +1430,13 @@ function ivocaStat(event, won, dane) {
             const pencilBtn = document.getElementById('btn-pencil');
             const pencilBadge = document.getElementById('pencil-badge');
 
+            pencilBtn.setAttribute('aria-pressed', String(state.pencilMode));
+            powiedz(state.pencilMode ? 'Ołówek włączony' : 'Ołówek wyłączony');
             if (state.pencilMode) {
-                pencilBtn.classList.add('bg-brand-100', 'dark:bg-brand-900/50', 'border-brand-500', 'text-brand-600');
+                pencilBtn.classList.add('bg-brand-100', 'dark:bg-brand-900/50', 'border-brand-500', 'text-brand-700', 'dark:text-brand-300');
                 pencilBadge.className = 'absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse';
             } else {
-                pencilBtn.classList.remove('bg-brand-100', 'dark:bg-brand-900/50', 'border-brand-500', 'text-brand-600');
+                pencilBtn.classList.remove('bg-brand-100', 'dark:bg-brand-900/50', 'border-brand-500', 'text-brand-700', 'dark:text-brand-300');
                 pencilBadge.className = 'absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-slate-400';
             }
         }
@@ -1244,6 +1444,7 @@ function ivocaStat(event, won, dane) {
         function handleArrowNavigation(key) {
             if (!state.selectedCell) {
                 selectCell(0, 0);
+                poleEl(0, 0).focus();
                 return;
             }
             let { row, col } = state.selectedCell;
@@ -1252,6 +1453,7 @@ function ivocaStat(event, won, dane) {
             if (key === 'ArrowLeft') col = Math.max(0, col - 1);
             if (key === 'ArrowRight') col = Math.min(8, col + 1);
             selectCell(row, col);
+            poleEl(row, col).focus();
         }
 
         function renderStatsModal() {
@@ -1275,16 +1477,39 @@ function ivocaStat(event, won, dane) {
                 card.innerHTML = `
                     <div>
                         <div class="font-bold text-slate-800 dark:text-slate-100">${diff.label}</div>
-                        <div class="text-xs text-slate-500 dark:text-slate-400">Rozegrane: ${s.played} | Wygrane: ${s.won} (${winRate}%)</div>
+                        <div class="text-xs text-slate-600 dark:text-slate-300">Rozegrane: ${s.played} | Wygrane: ${s.won} (${winRate}%)</div>
                     </div>
                     <div class="text-right">
-                        <div class="text-xs text-slate-500 dark:text-slate-400">Najlepszy czas</div>
-                        <div class="font-mono font-bold text-brand-600 dark:text-brand-400">${bestTimeStr}</div>
+                        <div class="text-xs text-slate-600 dark:text-slate-300">Najlepszy czas</div>
+                        <div class="font-mono font-bold text-brand-700 dark:text-brand-300">${bestTimeStr}</div>
                     </div>
                 `;
                 container.appendChild(card);
             });
         }
     </script>
+    <script>
+    // PWA: działanie bez internetu i przycisk „Zainstaluj”
+    (function () {
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
+        }
+        var tip = document.getElementById('install-tip'), btn = document.getElementById('installBtn'), prompt = null;
+        var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+        if (!standalone && isIOS) { btn.hidden = false; btn.setAttribute('aria-expanded', 'false'); }
+        window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); prompt = e; if (!standalone) btn.hidden = false; });
+        btn.addEventListener('click', function () {
+            if (!prompt) {
+                if (isIOS) { tip.hidden = !tip.hidden; btn.setAttribute('aria-expanded', String(!tip.hidden)); }
+                return;
+            }
+            prompt.prompt();
+            prompt.userChoice.catch(function () {}).then(function () { prompt = null; btn.hidden = true; });
+        });
+        window.addEventListener('appinstalled', function () { btn.hidden = true; tip.hidden = true; });
+    })();
+    </script>
+    <script src="/js/wyglad.js" defer></script>
 </body>
 </html>
