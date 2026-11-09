@@ -139,14 +139,14 @@
          wstrzykiwał go cdn.tailwindcss.com — klasy Tailwinda (np. hidden) muszą wygrywać z Font Awesome. -->
     <link rel="stylesheet" href="vendor/tailwind.css">
 <script>
-// Anonimowe statystyki gry (powiadom.ivoca.pl/v1/stats): tylko „rozpoczęta” / „ukończona”, bez danych o graczu.
+// Anonimowe statystyki gry (powiadom.ivoca.org/v1/stats): tylko „rozpoczęta” / „ukończona”, bez danych o graczu.
 function ivocaStat(event, won, dane) {
   // „Moje wyniki” na ivoca.org (ivoca-wyniki.js): zdarzenie z wariantem i wynikiem, zapisywane tylko w przeglądarce
   try { (window.ivocaWynikiQ = window.ivocaWynikiQ || []).push([event, won, dane]); } catch (e) {}
   try {
     var body = { event: event };
     if (typeof won === 'boolean') body.won = won;
-    fetch('https://powiadom.ivoca.pl/v1/stats', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) }).catch(function () {});
+    fetch('https://powiadom.ivoca.org/v1/stats', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) }).catch(function () {});
   } catch (e) {}
 }
 </script>
