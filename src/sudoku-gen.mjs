@@ -1,6 +1,8 @@
 // Generator sudoku dla wyzwania dnia. Plansza: tekst 81 znaków, '0' = puste pole.
-// Generator z kontrolą jednoznaczności (unikalne=true) jest wolny — używa go build/plansze-wyzwania.mjs
-// (plansze na zapas w bazie). Worker generuje awaryjnie bez tej kontroli (każde poprawne rozwiązanie i tak się liczy).
+// Generator z kontrolą jednoznaczności (unikalne=true) jest wolniejszy — używa go build/plansze-wyzwania.mjs
+// (plansze na zapas w bazie). Worker generuje awaryjnie też z kontrolą, ale z budżetem kroków solvera
+// (w Workerze zegar stoi w czasie obliczeń, więc czasu nie da się mierzyć): gdy budżet się skończy,
+// kolejne cyfry zostają na planszy — plansza ma wtedy mniej pustych pól, ale zawsze jedno rozwiązanie.
 
 export function losujWiersz(rnd) {
   const a = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -27,7 +29,9 @@ function wypelnij(t, rnd) {
 }
 
 // liczba rozwiązań, najwyżej `limit` (pole z najmniejszą liczbą kandydatów najpierw)
-export function liczRozwiazania(t, limit = 2) {
+// `bud` ({ n }) — opcjonalny budżet wywołań; po jego wyczerpaniu zwraca `limit` (czyli „niejednoznaczne”)
+export function liczRozwiazania(t, limit = 2, bud = null) {
+  if (bud && --bud.n < 0) return limit;
   let najl = -1, kand = null;
   for (let i = 0; i < 81; i++) {
     if (t[i]) continue;
@@ -40,14 +44,15 @@ export function liczRozwiazania(t, limit = 2) {
   let ile = 0;
   for (const n of kand) {
     t[najl] = n;
-    ile += liczRozwiazania(t, limit - ile);
+    ile += liczRozwiazania(t, limit - ile, bud);
     t[najl] = 0;
     if (ile >= limit) break;
   }
   return ile;
 }
 
-export function generuj(rnd, puste = 46, unikalne = true) {
+export function generuj(rnd, puste = 46, unikalne = true, budzet = Infinity) {
+  const bud = { n: budzet };
   const rozw = new Array(81).fill(0);
   wypelnij(rozw, rnd);
   const plansza = rozw.slice();
@@ -58,7 +63,7 @@ export function generuj(rnd, puste = 46, unikalne = true) {
     if (usuniete >= puste) break;
     const v = plansza[i];
     plansza[i] = 0;
-    if (unikalne && liczRozwiazania(plansza.slice(), 2) !== 1) { plansza[i] = v; continue; }
+    if (unikalne && liczRozwiazania(plansza.slice(), 2, bud) !== 1) { plansza[i] = v; continue; }
     usuniete++;
   }
   return { plansza: plansza.join(''), rozwiazanie: rozw.join('') };

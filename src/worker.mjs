@@ -9,8 +9,9 @@ export const SUDOKU = {
   nazwa: 'sudoku',
   kolejnosc: 'czas ASC',
   odliczanie: 5000,    // 5 s odliczania przed pokazaniem planszy; czas liczy się od końca odliczania
-  // Plansze są wygenerowane na zapas (build/plansze-wyzwania.mjs); to tylko awaryjnie, bez kontroli jednoznaczności
-  nowaPlansza() { return generuj(losowa, 46, false); },
+  // Plansze są wygenerowane na zapas (build/plansze-wyzwania.mjs); to tylko awaryjnie — z kontrolą jednoznaczności,
+  // ale z budżetem kroków solvera (przy wyczerpaniu mniej pustych pól, nadal jedno rozwiązanie)
+  nowaPlansza() { return generuj(losowa, 46, true, 40000); },
   publiczne(dane) { return { plansza: dane.plansza }; },
   poczatkowyStan() { return { wyslane: 0, bledy: 0 }; },
   ruch(stan, dane, body) {

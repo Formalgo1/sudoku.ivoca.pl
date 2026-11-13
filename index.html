@@ -805,28 +805,75 @@ function ivocaStat(event, won, dane) {
             // 1. Wygeneruj pełną prawidłową planszę
             const fullBoard = Array.from({ length: 9 }, () => Array(9).fill(0));
             fillSudokuBoard(fullBoard);
-            
+
             // Kopia pełnej planszy jako rozwiązanie
             const solution = fullBoard.map(row => [...row]);
 
-            // 2. Usuń cyfry w zależności od poziomu trudności
+            // 2. Usuń cyfry w zależności od poziomu trudności — każda plansza ma dokładnie jedno rozwiązanie
             const removeCountMap = { easy: 30, medium: 42, hard: 50, expert: 56 };
             const holes = removeCountMap[difficulty] || 40;
-            
-            const puzzle = solution.map(row => [...row]);
+            // Trudne poziomy: kilka prób (inna kolejność usuwania); gdy żadna nie da tylu pustych pól,
+            // zostaje najlepsza (mniej pustych pól, ale nadal jedno rozwiązanie)
+            const attempts = difficulty === 'expert' ? 12 : difficulty === 'hard' ? 4 : 2;
+            let best = null;
+            for (let a = 0; a < attempts; a++) {
+                const p = removeDigitsUnique(solution, holes);
+                if (!best || p.removed > best.removed) best = p;
+                if (best.removed >= holes) break;
+            }
+            return { puzzle: best.puzzle, solution };
+        }
+
+        // Usuwa cyfry w losowej kolejności, tylko tak, żeby plansza dalej miała jedno rozwiązanie
+        function removeDigitsUnique(solution, holes) {
+            const t = solution.flat();
+            const order = Array.from({ length: 81 }, (_, i) => i);
+            shuffleArray(order);
             let removed = 0;
-            
-            // Proste i szybkie usuwanie symetryczne lub losowe
-            while (removed < holes) {
-                const r = Math.floor(Math.random() * 9);
-                const c = Math.floor(Math.random() * 9);
-                if (puzzle[r][c] !== 0) {
-                    puzzle[r][c] = 0;
-                    removed++;
+            for (const i of order) {
+                if (removed >= holes) break;
+                const v = t[i];
+                t[i] = 0;
+                if (countSolutions(t, 2) === 1) removed++;
+                else t[i] = v;
+            }
+            const puzzle = Array.from({ length: 9 }, (_, r) => t.slice(r * 9, r * 9 + 9));
+            return { puzzle, removed };
+        }
+
+        // Liczba rozwiązań planszy (płaska tablica 81), najwyżej `limit`; pole z najmniejszą liczbą kandydatów najpierw
+        function countSolutions(t, limit) {
+            const rows = new Array(9).fill(0), cols = new Array(9).fill(0), boxes = new Array(9).fill(0);
+            for (let i = 0; i < 81; i++) {
+                if (!t[i]) continue;
+                const bit = 1 << t[i], r = (i / 9) | 0, c = i % 9;
+                rows[r] |= bit; cols[c] |= bit; boxes[(r / 3 | 0) * 3 + (c / 3 | 0)] |= bit;
+            }
+            let count = 0;
+            const popcount = m => { let n = 0; while (m) { m &= m - 1; n++; } return n; };
+            function rec() {
+                let best = -1, bestMask = 0, bestN = 10;
+                for (let i = 0; i < 81; i++) {
+                    if (t[i]) continue;
+                    const r = (i / 9) | 0, c = i % 9, b = (r / 3 | 0) * 3 + (c / 3 | 0);
+                    const m = ~(rows[r] | cols[c] | boxes[b]) & 0x3fe;
+                    const n = popcount(m);
+                    if (n === 0) return;
+                    if (n < bestN) { best = i; bestMask = m; bestN = n; if (n === 1) break; }
+                }
+                if (best < 0) { count++; return; }
+                const r = (best / 9) | 0, c = best % 9, b = (r / 3 | 0) * 3 + (c / 3 | 0);
+                for (let m = bestMask; m && count < limit; m &= m - 1) {
+                    const bit = m & -m;
+                    t[best] = 31 - Math.clz32(bit);
+                    rows[r] |= bit; cols[c] |= bit; boxes[b] |= bit;
+                    rec();
+                    rows[r] &= ~bit; cols[c] &= ~bit; boxes[b] &= ~bit;
+                    t[best] = 0;
                 }
             }
-
-            return { puzzle, solution };
+            rec();
+            return count;
         }
 
         function fillSudokuBoard(board) {
