@@ -1,7 +1,7 @@
 // Service worker gry Sudoku: zwykła gra działa bez internetu.
 // Strategia: pliki z pamięci podręcznej od razu, w tle pobierana nowa wersja (stale-while-revalidate).
 // Przy każdej zmianie plików gry podbij VERSION, żeby stara pamięć została usunięta.
-const VERSION = 'sudoku-v3';
+const VERSION = 'sudoku-v4';
 const FILES = [
   './',
   'manifest.webmanifest',
