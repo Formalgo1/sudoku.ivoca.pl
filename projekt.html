@@ -86,19 +86,17 @@ form.contact button:disabled { opacity: .6; cursor: default; }
 .ok { color: var(--brand-text); margin: 0; font-weight: 600; }
 .back { margin-top: 32px; }
 .site-footer { text-align: center; color: var(--soft); font-size: 0.8125rem; padding: 0 16px 32px; }
-/* Powrót na stronę główną ivoca.org: znaczek „i” z podpisem ivoca.org, skrajnie po lewej w pasku u góry */
-a.ivoca-dom { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex: none; min-width: 44px; height: 2.75rem; min-height: 44px; padding: 0 .375rem; border-radius: 12px; background: #2563eb; color: #fff; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1; text-decoration: none; }
+/* Powrót na stronę główną ivoca.org: kwadratowy znaczek „i”, skrajnie po lewej w pasku u góry */
+a.ivoca-dom { display: inline-grid; place-items: center; flex: none; width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 12px; background: #2563eb; color: #fff; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1; text-decoration: none; }
 a.ivoca-dom::before { content: "i"; font-size: 1.25rem; font-weight: 700; }
-a.ivoca-dom small { font-size: .625rem; font-weight: 600; }
 a.ivoca-dom:hover { background: #1d4ed8; }
 a.ivoca-dom:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
-@media (max-width: 420px) { a.ivoca-dom { padding: 0 .125rem; } }
 .topbar .actions { margin-left: auto; }
       </style>
 </head>
 <body>
   <header class="topbar">
-    <a class="ivoca-dom" href="https://ivoca.org/#k-sudoku" title="ivoca.org — wszystkie gry i narzędzia" aria-label="ivoca.org — wszystkie gry i narzędzia"><small>ivoca.org</small></a>
+    <a class="ivoca-dom" href="https://ivoca.org/#k-sudoku" title="ivoca.org — wszystkie gry i narzędzia" aria-label="ivoca.org — wszystkie gry i narzędzia"></a>
     <a href="./" class="brand">Sudoku</a>
     <div class="actions">
       <div class="wyglad"><button class="wyglad-btn" id="btn-wyglad" type="button" data-font-opis="systemowa" data-font-css="system-ui, sans-serif" aria-expanded="false" aria-controls="wyglad-panel" title="Czcionka i rozmiar tekstu" aria-label="Aa – czcionka i rozmiar tekstu" hidden>A<small>a</small></button></div>
